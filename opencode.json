@@ -1,0 +1,43 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["docs/conventions/naming.md"],
+  "permissions": [
+    { "action": "shell", "resource": "*", "effect": "ask" },
+
+    { "action": "shell", "resource": "make *", "effect": "allow" },
+    { "action": "shell", "resource": "go test *", "effect": "allow" },
+    { "action": "shell", "resource": "go vet *", "effect": "allow" },
+    { "action": "shell", "resource": "go build *", "effect": "allow" },
+    { "action": "shell", "resource": "gofmt *", "effect": "allow" },
+    { "action": "shell", "resource": "pnpm *", "effect": "allow" },
+    { "action": "shell", "resource": "git status *", "effect": "allow" },
+    { "action": "shell", "resource": "git diff *", "effect": "allow" },
+    { "action": "shell", "resource": "git log *", "effect": "allow" },
+    { "action": "shell", "resource": "git show *", "effect": "allow" },
+
+    { "action": "shell", "resource": "git commit *", "effect": "ask" },
+
+    { "action": "shell", "resource": "git push *", "effect": "deny" },
+    { "action": "shell", "resource": "git reset --hard *", "effect": "deny" },
+    { "action": "shell", "resource": "git clean *", "effect": "deny" },
+    { "action": "shell", "resource": "rm -rf *", "effect": "deny" },
+    { "action": "shell", "resource": "docker compose down -v *", "effect": "deny" },
+
+    { "action": "read", "resource": "**/.env", "effect": "deny" },
+    { "action": "read", "resource": "**/.env.*", "effect": "deny" },
+    { "action": "read", "resource": "**/.env.example", "effect": "allow" },
+
+    { "action": "edit", "resource": "apps/backend/migrations/*", "effect": "ask" },
+    { "action": "edit", "resource": "**/gen/**", "effect": "deny" },
+    { "action": "edit", "resource": "**/*.gen.go", "effect": "deny" },
+    { "action": "edit", "resource": "packages/api-client/src/generated/**", "effect": "deny" }
+  ],
+  "agents": {
+    "plan": {
+      "permissions": [
+        { "action": "edit", "resource": "*", "effect": "deny" },
+        { "action": "shell", "resource": "*", "effect": "ask" }
+      ]
+    }
+  }
+}

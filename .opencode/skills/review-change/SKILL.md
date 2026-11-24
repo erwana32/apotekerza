@@ -1,0 +1,50 @@
+---
+name: review-change
+description: Review checklist for a change in apotekerza. Used by the read-only reviewer agent; use it to review a diff against the project's hard rules.
+---
+
+# review-change
+
+Read-only. Use `git diff`, `git log`, `git show`. Do not edit files.
+
+## Steps
+
+1. Read the root `AGENTS.md`, the nested `AGENTS.md` of every folder in the diff, and `docs/modules/<module>.md` of every module touched.
+2. Walk the checklist below. For each finding give `path/file:line`, the rule it breaks, and the consequence.
+3. Report most severe first, and separate: hard-rule violations, confident bugs, suggestions. Do not report what you cannot point to in the code.
+
+## Checklist
+
+**Boundaries**
+- Does any module import another module's `domain/`, `app/`, `httpapi/`, or `store/`? Does any code read another module's tables?
+- Are composite reads using public interfaces or `v_` views?
+- Is there a dependency cycle against the table in `docs/architecture.md`?
+
+**Ledger and stock**
+- Any `UPDATE`/`DELETE` on journal or stock movement rows? Corrections must be reversing entries.
+- Is a journal posted in the same transaction as its document and stock movements?
+- FEFO respected? Expired batches blocked? Batch and expiry mandatory on receipt when tracked?
+- Cost per batch, no averaging?
+
+**Money and numbers**
+- Any `float` for money or quantity? Decimal strings in the API?
+- Rounding only at documented points?
+
+**API and generated code**
+- Spec changed first? `operationId` unique and `VerbNoun`? `x-permission` set?
+- Any hand edit of generated code or an existing migration?
+- Handler thin; logic in the service?
+
+**Security and data**
+- Permission checked on the backend for every endpoint?
+- Patient data or personal data in logs, tests, examples, or docs?
+- Secrets or `.env` values committed?
+
+**Tests and docs**
+- Tests for finance/stock logic? Integration tests on a real PostgreSQL, no mocked database?
+- `docs/modules/<module>.md` updated in the same change? ADR for an architecture decision?
+- Regulatory claims written as assumptions with `Needs APJ confirmation`?
+
+**Naming and language**
+- File prefixes and test suffixes per `docs/conventions/naming.md` (`make check-naming` passes)?
+- English in code, docs, and commits; Indonesian only for user-facing text; term names per `docs/glossary.md`?
