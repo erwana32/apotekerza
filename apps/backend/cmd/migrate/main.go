@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -40,6 +41,10 @@ func run(dir string) error {
 		return fmt.Errorf("migrate: dialect: %w", err)
 	}
 	if err := goose.UpContext(context.Background(), conn, dir); err != nil {
+		// No schema migrations exist yet (Phase 0). This is a valid no-op.
+		if errors.Is(err, goose.ErrNoMigrationFiles) {
+			return nil
+		}
 		return fmt.Errorf("migrate: up: %w", err)
 	}
 	return nil

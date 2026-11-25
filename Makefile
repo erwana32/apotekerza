@@ -34,7 +34,7 @@ check-naming: ## Check file naming rules
 check: check-naming gen-check lint test ## Gate before merging
 
 dev-up: ## Start the local dev environment
-	@if [ -f $(COMPOSE) ]; then docker compose -f $(COMPOSE) up -d; else echo "skip: $(COMPOSE) not created yet"; fi
+	@if [ -f $(COMPOSE) ]; then docker compose -f $(COMPOSE) up -d --build; else echo "skip: $(COMPOSE) not created yet"; fi
 
 dev-down: ## Stop the local dev environment (data volumes are kept)
 	@if [ -f $(COMPOSE) ]; then docker compose -f $(COMPOSE) down; else echo "skip: $(COMPOSE) not created yet"; fi

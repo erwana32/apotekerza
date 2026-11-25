@@ -1,0 +1,13 @@
+FROM node:25-alpine AS build
+WORKDIR /app
+RUN npm install -g pnpm@10.34.9
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY packages/api-client/package.json packages/api-client/
+COPY apps/web/package.json apps/web/
+RUN pnpm install --frozen-lockfile
+COPY packages/api-client packages/api-client
+COPY apps/web apps/web
+RUN pnpm --filter @apotekerza/web run build
+
+FROM caddy:2-alpine
+COPY --from=build /app/apps/web/dist /usr/share/caddy
