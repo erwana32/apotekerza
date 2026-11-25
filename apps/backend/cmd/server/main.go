@@ -12,6 +12,7 @@ import (
 	"github.com/erwana32/apotekerza/internal/platform/config"
 	platformdb "github.com/erwana32/apotekerza/internal/platform/db"
 	platformhttp "github.com/erwana32/apotekerza/internal/platform/http"
+	"github.com/erwana32/apotekerza/internal/platform/http/gen"
 	platformlog "github.com/erwana32/apotekerza/internal/platform/log"
 )
 
@@ -39,13 +40,16 @@ func run() error {
 	defer pool.Close()
 
 	mux := http.NewServeMux()
-	// Operational liveness probe only. The versioned GET /api/v1/health is
-	// added from api/openapi.yaml in Prompt 0.3.
+	// Operational liveness probe, outside the OpenAPI contract.
 	mux.Handle("GET /healthz", platformhttp.NewHealthHandler())
+
+	// Versioned API routes come from the generated strict server.
+	strict := gen.NewStrictHandler(platformhttp.NewStrictHandler(), nil)
+	handler := gen.HandlerFromMux(strict, mux)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	logger.Info("starting http server", "addr", cfg.HTTPAddr)
-	return platformhttp.NewServer(cfg.HTTPAddr, logger, platformhttp.RequestID(logger, mux)).Run(ctx)
+	return platformhttp.NewServer(cfg.HTTPAddr, logger, platformhttp.RequestID(logger, handler)).Run(ctx)
 }

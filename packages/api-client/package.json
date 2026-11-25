@@ -6,6 +6,13 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "generate": "echo \"OpenAPI client generator is wired in Phase 0.3\""
+    "generate": "openapi-typescript ../../api/openapi.yaml -o src/generated/api.d.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
   }
 }

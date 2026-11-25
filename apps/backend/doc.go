@@ -5,4 +5,4 @@
 // and in the slices that add SQL queries.
 package backend
 
-//go:generate echo "No generators wired yet (Phase 0.3 adds the OpenAPI generator)."
+//go:generate go tool oapi-codegen -config oapi-codegen.yaml ../../api/openapi.yaml
