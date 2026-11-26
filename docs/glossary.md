@@ -24,7 +24,7 @@ Indonesian pharmacy and accounting terms mapped to English identifiers in code. 
 |---|---|---|
 | Produk / Obat | `product` | Any sellable item (drug, medical device, general goods) |
 | Master produk | `product` in `masterdata` | Product definition (name, units, tax, min/max stock) |
-| Daftar Produk | `v_product_stock` view / page `ProductListPage` | Product master joined with stock, different from the master data screen |
+| Daftar Produk | page `ProductListPage` (optional view `v_inventory_product_stock`) | Product master joined with stock, different from the master data screen |
 | Golongan obat | `drug_class` | `otc`, `limited_otc`, `prescription`, `oot`, `psychotropic`, `narcotic`, `precursor` (*assumption*) |
 | Alat kesehatan (Alkes) | `medical_device` | Product type |
 | Barang umum (Umum) | `general_goods` | Non-drug goods such as food and skincare |
@@ -79,6 +79,9 @@ Indonesian pharmacy and accounting terms mapped to English identifiers in code. 
 | Penyerahan obat | `dispensing` | Handing drugs to the patient |
 | Buku catat narkotika/psikotropika | `controlled_substance_log` | Log of narcotics/psychotropics movements |
 | Void | `void` | Cancellation done as a reversing document, never a deletion |
+| Status dokumen | `status` | `draft`, `confirmed`, `posted`, `cancelled` (ADR-0010) |
+| Nomor dokumen | `document_number` | Number assigned by the server when a document leaves `draft` |
+| Riwayat | `history` | Per-document log of who did what and when, built on the audit trail |
 | Kanal pembayaran | `payment_channel` | Cash, transfer, QRIS, debit, ... (configurable) |
 | Pembulatan | `rounding_amount` | Rounding adjustment on a sale |
 

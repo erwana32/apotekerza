@@ -12,7 +12,8 @@ internal/<module>/
   app/             service_*.go one use case per file, owns the transaction
   httpapi/         handler_*.go, mapper_*.go
   store/           repo_*.go, queries/query_*.sql, gen/ (sqlc output, never edited)
-internal/platform/ shared infrastructure (config, db, log, http server, auth middleware, money, ids)
+internal/platform/ shared infrastructure: apierror, clock, config, db (pool, WithTx), http (server, middleware, `gen/` = generated strict server), ids, log, money, pagination, testutil
+cmd/server, cmd/migrate  entry points (the migrate binary runs goose migrations as a separate step)
 migrations/        goose migrations, add-only
 ```
 
@@ -32,7 +33,7 @@ See `docs/conventions/naming.md`. In short: Go files carry a role prefix (`model
 - **Audit trail** records access to patient data, stock movements, corrections, and Administrator actions. Never log personal data contents.
 - **Errors** are wrapped with `%w`. Never swallow an error. Never `panic` on a request path.
 - **Queries** live in `store/queries/query_<entity>.sql` (sqlc), named `GetXByID`, `ListXs`, `InsertX`, `UpdateX`. No ORM.
-- **Migrations** are `migrations/<timestamp>_<module>_<description>.sql`, one Postgres schema per module (`CREATE SCHEMA <module>`). Never modify an existing migration (skill `add-migration`).
+- **Migrations** are `migrations/<timestamp>_<module>_<description>.sql`, one schema (`public`) with every table prefixed by its module (`inventory_stock_batches`, ADR-0001). Never modify an existing migration (skill `add-migration`).
 - **User-facing messages** are not composed in the backend: the API returns a stable error `code`; the frontend maps it to Indonesian text.
 
 ## Tests
@@ -44,7 +45,7 @@ See `docs/conventions/naming.md`. In short: Go files carry a role prefix (`model
 
 ## Do not
 
-- Read tables of another schema (`inventory.*` from module `pos`, etc.).
+- Import another module's `domain/`, `app/`, `httpapi/`, or `store/` Go packages (SQL may reference any table, ADR-0001, but Go imports may not).
 - Put business logic in a handler or in `.sql`.
 - Edit `store/gen/`, `*.gen.go`, or old migrations.
 - Add a new module without approval (see skill `add-module`).

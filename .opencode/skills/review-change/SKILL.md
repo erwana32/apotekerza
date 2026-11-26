@@ -16,8 +16,7 @@ Read-only. Use `git diff`, `git log`, `git show`. Do not edit files.
 ## Checklist
 
 **Boundaries**
-- Does any module import another module's `domain/`, `app/`, `httpapi/`, or `store/`? Does any code read another module's tables?
-- Are composite reads using public interfaces or `v_` views?
+- Does any module import another module's `domain/`, `app/`, `httpapi/`, or `store/`? Does any code skip an owner's checks by writing its tables directly (journals without `finance.PostJournal`, stock without FEFO)? Reading other modules' tables is allowed (ADR-0001).
 - Is there a dependency cycle against the table in `docs/architecture.md`?
 
 **Ledger and stock**
@@ -25,6 +24,10 @@ Read-only. Use `git diff`, `git log`, `git show`. Do not edit files.
 - Is a journal posted in the same transaction as its document and stock movements?
 - FEFO respected? Expired batches blocked? Batch and expiry mandatory on receipt when tracked?
 - Cost per batch, no averaging?
+
+**Documents (ADR-0010)**
+- Statuses only from `draft`, `confirmed`, `posted`, `cancelled`? Does a draft ever create journal lines or stock movements? Can a confirmed or posted document be edited or deleted (it must be cancelled by a reversing document)?
+- Is the document number assigned by the server when the document leaves `draft`? Does the document page show its history?
 
 **Money and numbers**
 - Any `float` for money or quantity? Decimal strings in the API?

@@ -4,7 +4,7 @@ Shared kernel: contacts, products, tiered units, tax, and the `store`. The only 
 
 - **Status:** Planned
 - **Depends on:** `identity`
-- **Schema:** `masterdata`
+- **Table prefix:** `masterdata_` (one schema, ADR-0001)
 
 ## Responsibilities
 
@@ -18,7 +18,7 @@ Shared kernel: contacts, products, tiered units, tax, and the `store`. The only 
 
 - `min_stock` and `max_stock` live on the product master and are the baseline for the Defecta (owned by `purchase`): at or below `min_stock` means reorder, above `max_stock` means do not.
 - `min_stock` and `max_stock` are **entered on the product master form** (masterdata), not on the Defecta. Decided by the developer: both must be entered and stored in the **smallest unit** of the product (the form shows the unit name next to the field and accepts no other unit). Also decided (2026-11-25, developer accepted the recommendation): both are optional (empty means the product is not part of the Defecta); `max_stock` must be greater than or equal to `min_stock`; version 1 has one value per product (a per-store value comes with multi-pharmacy).
-- Product master is distinct from the **Product List** screen, which is a read-only join of master data and stock (published by `inventory` as `inventory.v_product_stock`).
+- Product master is distinct from the **Product List** screen, which is a read-only join of master data and stock (a query joining `masterdata_products` with the stock tables of `inventory`).
 - Deactivating a product never deletes it (history must stay readable).
 
 ## Public interface

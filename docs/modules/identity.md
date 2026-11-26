@@ -4,13 +4,13 @@ Users, sessions, access groups, permissions, and the audit trail.
 
 - **Status:** Planned
 - **Depends on:** none
-- **Schema:** `identity`
+- **Table prefix:** `identity_` (one schema, ADR-0001)
 
 ## Responsibilities
 
 - Authentication: password login, cookie sessions (`HttpOnly`, `Secure`, `SameSite`), argon2id password hashing, logout, session expiry.
 - Authorisation: permissions `<module>.<resource>.<action>`; access groups = named sets of permissions; a user can hold several groups, permissions are the union.
-- Audit trail: append-only record of who did what and when for patient-data access, stock movements and corrections, journal posting, and Administrator actions. Never stores personal data contents, only references.
+- Audit trail: append-only record of who did what and when for patient-data access, stock movements and corrections, journal posting, and Administrator actions. Never stores personal data contents, only references. It also feeds the per-document history shown on every document page (ADR-0010).
 
 ## Version 1 behaviour
 

@@ -4,7 +4,7 @@ Batches, expiry, stock movements, FEFO allocation, batch cost, stock take, and s
 
 - **Status:** Planned
 - **Depends on:** `masterdata`, `finance`
-- **Schema:** `inventory`
+- **Table prefix:** `inventory_` (one schema, ADR-0001)
 
 ## Responsibilities
 
@@ -17,11 +17,11 @@ Batches, expiry, stock movements, FEFO allocation, batch cost, stock take, and s
 
 ## Reports (computed from the stock book)
 
-Stock/Inventory report (stock card per product and per batch), **Product List** (view `v_product_stock` joined with master data on screen), **Expiry report**. The **Defecta** is owned by `purchase` (it ends in a purchase plan); `inventory` only supplies the stock figures through `inventory.v_product_stock`.
+Stock/Inventory report (stock card per product and per batch), **Product List** (stock joined with master data on screen), **Expiry report**. The **Defecta** is owned by `purchase` (it ends in a purchase plan); `inventory` owns the stock tables that the Defecta joins.
 
-### Stock figures published for the Defecta
+### Stock figures used by the Defecta
 
-`inventory.v_product_stock` exposes per product: stock on hand (sum of batches that are not expired, in the smallest unit) and the nearest expiry. `purchase` reads this view; it never reads inventory tables. The exact definition of "available stock" (whether near-expiry batches count) is an assumption: see `docs/modules/purchase.md`, Defecta.
+Per product: stock on hand (sum of batches that are not expired, in the smallest unit) and the nearest expiry. `purchase` may join the inventory tables directly (ADR-0001); a shared query or view `v_inventory_product_stock` is optional. The exact definition of "available stock" (whether near-expiry batches count) is an assumption: see `docs/modules/purchase.md`, Defecta.
 
 ## Rules and invariants
 

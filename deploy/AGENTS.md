@@ -2,10 +2,12 @@
 
 One VPS, Docker Compose. General rules are in the root `AGENTS.md`.
 
-## Planned contents
+## Contents
 
-- `docker-compose.yml`: `caddy`, `backend`, `postgres`. The static web build (`pnpm build`) is served by Caddy.
-- `Caddyfile`: automatic TLS, reverse proxy `/api/*` to `backend`, everything else static files with SPA fallback.
+- `docker-compose.yml` (base, local dev): `postgres`, `migrate` (runs once before the backend), `backend`, and `caddy` (built from `Dockerfile.web`, serves the static web build). `make dev-up` / `make dev-down` use it. Its dev-only database password fallback must never be used in production.
+- `docker-compose.prod.yml`: production override. It makes `POSTGRES_*` and `APP_DOMAIN` mandatory (the stack refuses to start without them). Use it together with the base file.
+- `Caddyfile` (production, automatic TLS for `APP_DOMAIN`) and `Caddyfile.local` (plain HTTP on localhost for dev): both reverse-proxy `/api/*` to `backend:8080` and serve static files with SPA fallback. `CADDYFILE` in `.env` selects which one is mounted.
+- `Dockerfile.backend` (builds `server` and `migrate`) and `Dockerfile.web`.
 - `.env.example`: variable names **without secret values**.
 
 ## Rules

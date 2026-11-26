@@ -9,7 +9,7 @@ Finance and stock code needs explicit, reviewable SQL, exact transactions, and e
 
 ## Decision
 
-Database access uses `pgx`. Queries are written as SQL and turned into Go by `sqlc`. Migrations are plain SQL files managed by `goose`, add-only. One Postgres schema per module. Money is `numeric(18,2)` and quantities `numeric(18,4)`, mapped to a decimal type in Go, never `float`.
+Database access uses `pgx`. Queries are written as SQL and turned into Go by `sqlc`. Migrations are plain SQL files managed by `goose`, add-only. All tables live in one schema with a module prefix (ADR-0001). Money is `numeric(18,2)` and quantities `numeric(18,4)`, mapped to a decimal type in Go, never `float`.
 
 ## Consequences
 

@@ -25,12 +25,12 @@ Start from what `docs/modules/<module>.md` already says about the entity. Wait f
 1. Read `apps/backend/AGENTS.md` and the module doc.
 2. Create `apps/backend/migrations/<timestamp>_<module>_<description>.sql` (e.g. `20261124120000_inventory_create_stock_batches.sql`). Use goose `-- +goose Up` / `-- +goose Down` sections.
 3. Rules for the SQL:
-   - Objects live in the module's own schema (`inventory.stock_batches`). Never touch another module's schema.
+   - All objects live in the single `public` schema. Table names are `<module>_<plural_name>` (`inventory_stock_batches`), the prefix being the owning module (ADR-0001). Foreign keys may point to tables of other modules (`ON DELETE RESTRICT` by default).
    - Tables plural `snake_case`; primary key `id` (UUIDv7); foreign keys `<entity>_id`; business tables carry `store_id` and `company_id`.
    - `created_at`, `updated_at` as `timestamptz`.
    - Money `numeric(18,2)` named `*_amount`; quantities `numeric(18,4)`. Never `float`.
    - Ledger and stock tables are append-only: do not add update/delete paths. Corrections are reversing rows.
-   - A read contract for other modules is a view named `v_<name>`, never direct table access.
+   - Views are optional, for reports only, named `v_<module>_<name>`. Other modules may read tables directly.
    - Add indexes for the queries you write and for every foreign key you filter on.
 4. Write or update the sqlc queries in `store/queries/query_<entity>.sql` (`GetXByID`, `ListXs`, `InsertX`, `UpdateX`). Run `make gen`.
 5. Add an integration test that exercises the new schema against a real PostgreSQL.

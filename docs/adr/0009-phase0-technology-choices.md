@@ -1,4 +1,4 @@
-# 0010. Phase 0 technology choices
+# 0009. Phase 0 technology choices
 
 - **Status:** Accepted
 - **Date:** 2026-11-26

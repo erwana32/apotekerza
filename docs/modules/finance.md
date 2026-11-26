@@ -4,7 +4,7 @@ Chart of accounts, double-entry journals, general ledger, accounts payable, cash
 
 - **Status:** Planned
 - **Depends on:** `masterdata`
-- **Schema:** `finance`
+- **Table prefix:** `finance_` (one schema, ADR-0001)
 
 ## Responsibilities
 
