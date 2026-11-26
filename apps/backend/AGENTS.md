@@ -17,7 +17,7 @@ cmd/server, cmd/migrate  entry points (the migrate binary runs goose migrations 
 migrations/        goose migrations, add-only
 ```
 
-Import direction: `httpapi → app → domain` and `app → store`. `domain` imports nothing from this project except shared types (`platform/money`, `platform/ids`). Other modules are imported only through the package `internal/<module>` (which holds `module.go`).
+Import direction: `httpapi → app → domain` and `app → store`; `make lint` enforces it (`layer-*` depguard rules in `.golangci.yml`: domain imports none of app/httpapi/store, store none of app/httpapi, app not httpapi, httpapi not store). `domain` imports nothing from this project except shared types (`platform/money`, `platform/ids`). Other modules are imported only through the package `internal/<module>` (which holds `module.go`).
 
 ## Naming
 
@@ -39,7 +39,8 @@ See `docs/conventions/naming.md`. In short: Go files carry a role prefix (`model
 ## Tests
 
 - Unit tests: table-driven for pure logic (`domain/`, pricing rules, FEFO, rounding).
-- Integration tests: real PostgreSQL via testcontainers, no mocked database. Mandatory for journal posting, stock movements, goods receipt, POS sales, and voids.
+- Integration tests: real PostgreSQL via testcontainers, no mocked database. Mandatory for journal posting, stock movements, goods receipt, POS sales, and voids. Use `testutil.NewDatabase(t)`: one shared container per test package (stopped by `TestMain` calling `testutil.RunMain`), migrated once into a template database, and cloned per test, so tests are fast and isolated and never need `TRUNCATE` (append-only tables reject it). `make test-integration` runs packages one at a time (`-p 1`).
+- Every `x-permission` in `api/openapi.yaml` must be granted to Administrator by a migration; `TestAdministrator_HoldsEveryDeclaredPermission` fails otherwise.
 - Name pattern: `Test<Unit>_<Behaviour>`, e.g. `TestReceiveGoods_RejectsMissingBatch`.
 - Commands: `make test`, `make test-integration`.
 

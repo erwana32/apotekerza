@@ -24,7 +24,7 @@ test: ## Unit tests for Go and web (no integration tests)
 	@pnpm --filter ./$(WEB_DIR) run test
 
 test-integration: ## Go integration tests (real PostgreSQL via testcontainers, needs Docker)
-	@cd $(BACKEND_DIR) && go test -tags=integration ./...
+	@cd $(BACKEND_DIR) && go test -tags=integration -p 1 ./...
 
 test-e2e: ## Playwright smoke tests (needs browsers: pnpm exec playwright install chromium)
 	@pnpm --filter ./$(WEB_DIR) run test:e2e

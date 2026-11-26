@@ -15,6 +15,7 @@ The product grows in stages from Finance, Inventory, and POS toward a pharmacy E
 - **Free cross-module access in SQL.** Any module may read, join, and write the tables of other modules, and foreign keys may point to any table (`ON DELETE RESTRICT` by default).
 - **Go structure keeps the boundary.** Modules call each other only through `module.go`, and import lint forbids importing another module's `domain/`, `app/`, `httpapi/`, or `store/`. Only SQL is free; Go package boundaries are not.
 - **Invariants live in the database.** The append-only rule of ADR-0004 is enforced by triggers on journal and stock movement tables, so it holds no matter which module writes.
+- **Scope is `company_id` only, as in Odoo.** A pharmacy is a company; a branch (cabang) is a child company (`parent_id`), and a legal entity owning several pharmacies is their parent. There is no `store_id` or `branch_id`. `company_id` is on documents and lines, operational data, users, and the audit log; it is not on access groups (global), link tables, or session tokens, and not on products and contacts in version 1 (shared; an optional `company_id` is added when multi-company is built). A warehouse or location dimension is added only when one pharmacy needs several.
 - **Cross-module transactions** are one database transaction (ADR-0004).
 - Read-only views are optional, for reports, named `v_<module>_<name>`.
 
@@ -35,3 +36,4 @@ The product grows in stages from Finance, Inventory, and POS toward a pharmacy E
 ## Change log
 
 - 2026-11-26: changed from one schema per module (no cross-module table reads) to one schema with module-prefixed tables and free SQL access, to follow Odoo.
+- 2026-11-27: removed the separate `store` concept; scope is `company_id` only with branches as child companies, following Odoo's schema (no `branch_id` column anywhere in Odoo; branches are companies with a parent).

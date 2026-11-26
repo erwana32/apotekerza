@@ -6,9 +6,9 @@ Indonesian pharmacy and accounting terms mapped to English identifiers in code. 
 
 | Indonesian | English / identifier | Meaning |
 |---|---|---|
-| Apotek | `store` (table `stores`, column `store_id`) | One pharmacy (one licence, one APJ) |
-| Perusahaan | `company` (`company_id`) | Legal entity that owns the store(s) |
-| APJ (Apoteker Penanggung Jawab) | `pharmacist_in_charge` | Pharmacist legally responsible for the store |
+| Apotek / Cabang | `company` (table `masterdata_companies`, column `company_id`, optional `parent_id`) | One pharmacy (one licence, one APJ). A branch (cabang) is a child company |
+| Perusahaan induk / badan usaha | parent `company` | Legal entity that owns several pharmacies; the parent of their company rows |
+| APJ (Apoteker Penanggung Jawab) | `pharmacist_in_charge` | Pharmacist legally responsible for the pharmacy (company) |
 | TTK (Tenaga Teknis Kefarmasian) | `pharmacy_technician` | Pharmacy technician (assistant) |
 | Kasir | `cashier` | Person operating the POS |
 | Pemilik | `owner` | Business owner |

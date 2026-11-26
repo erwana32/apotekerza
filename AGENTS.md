@@ -6,7 +6,7 @@ This project stands alone. Do not reference, copy from, or take assumptions from
 
 ## Goal
 
-A staged ERP for an Indonesian **pharmacy (apotek)**, starting with **one pharmacy** (one `store`) per installation. Version 1 scope: Finance, Inventory, Purchasing, POS, and the pharmacy service (prescriptions). The application code is built incrementally in vertical slices (see `docs/architecture.md`, "Build order").
+A staged ERP for an Indonesian **pharmacy (apotek)**, starting with **one pharmacy** (one `company`) per installation. Version 1 scope: Finance, Inventory, Purchasing, POS, and the pharmacy service (prescriptions). The application code is built incrementally in vertical slices (see `docs/architecture.md`, "Build order").
 
 Stack: Go, PostgreSQL, React (TypeScript) + Tailwind, OpenAPI, Docker Compose, Caddy.
 
@@ -55,7 +55,7 @@ Stack: Go, PostgreSQL, React (TypeScript) + Tailwind, OpenAPI, Docker Compose, C
 10. **Patient data is sensitive.** Never put personal data in logs, tests, examples, or docs. Use invented data.
 11. **Do not add modules, large dependencies, or features outside the list** in `docs/architecture.md` without the developer's approval. Deferred features are listed there.
 12. **Do not invent pharmacy regulations** (narcotics, psychotropics, prescription retention, tax). Write them as assumptions and mark them `Needs APJ confirmation` in the module doc.
-13. One pharmacy is called `store` in code (table `stores`, column `store_id`).
+13. **Scope is `company` only (Odoo style, ADR-0001).** One pharmacy (apotek) is one `company` (table `masterdata_companies`, column `company_id`); a branch (cabang) is a child company (`parent_id`), and a legal entity owning several pharmacies is their parent company. There is no `store`, `store_id`, or `branch_id`. (`store/` is only the name of the Go data-access folder.)
 14. **Documents follow ADR-0010.** Status from `draft`, `confirmed`, `posted`, `cancelled`; a draft never creates journal lines or stock movements; confirmed and posted documents are immutable and cancelled by a reversing document; the server assigns the number when the document leaves `draft`.
 
 ## Read first before touching
@@ -90,7 +90,7 @@ A behaviour change must update `docs/modules/<module>.md` in the same change. A 
 The developer is learning while building, not only using. Work in small steps and get confirmation before each one. One step = one concept (one table, one endpoint, one service, one screen).
 
 - **Before each step:** say "Step N of M", what you will build, why, where it fits (module and layer), the alternatives you considered with your recommendation, and the files you will touch. Then wait for the developer's OK. Never run several steps on one OK.
-- **Design first when there is a choice.** For a table, propose the design before any SQL: columns with types and why, constraints, indexes, relations, whether it is append-only, and `store_id`/`company_id`. For an endpoint, propose path, `operationId`, request, response, permission, and error codes. For a posting or stock rule, show a worked example with numbers. Wait for approval or changes.
+- **Design first when there is a choice.** For a table, propose the design before any SQL: columns with types and why, constraints, indexes, relations, whether it is append-only, and whether it carries `company_id` (see `docs/conventions/naming.md`). For an endpoint, propose path, `operationId`, request, response, permission, and error codes. For a posting or stock rule, show a worked example with numbers. Wait for approval or changes.
 - **After each step:** explain what was built in plain words, point to the files, give the command to run and verify it, and name what comes next.
 - **Explain new concepts once, briefly,** when first used (e.g. FEFO, double-entry, idempotency key, append-only). Use the Indonesian term with the English identifier from `docs/glossary.md`.
 - The developer can say "batch mode" to allow several steps at once for the rest of the session, and "teaching mode" to return. Without that, stay in teaching mode.

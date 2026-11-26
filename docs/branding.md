@@ -37,4 +37,4 @@ Use these as design tokens in the Tailwind theme (`brand.blue`, `brand.pink`, `b
 - **Raster vs vector:** `logo-mark.png` is not pixel-identical to `logo.svg` (about 0.5% of pixels differ along edges and small details), so prefer the SVG when exactness matters or the logo is shown large.
 - A monochrome version (for thermal receipts) is not provided. Derive it from the SVG when first needed.
 - The SVG `<title>` reads "Caring Hands Pharmacy Rx", not "Apotek Erza". The file is never edited here; the app sets its own accessible name ("Apotek Erza") on the element that shows the logo.
-- Printed documents (receipt, drug label, purchase order) show the store name and APJ details from `masterdata`, plus the logo from `source/logo.svg`.
+- Printed documents (receipt, drug label, purchase order) show the company (pharmacy) name and APJ details from `masterdata`, plus the logo from `source/logo.svg`.

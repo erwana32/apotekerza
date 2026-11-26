@@ -8,7 +8,7 @@ Purchase orders (SP, per type), goods receipt, supplier invoices, returns, and s
 
 ## Responsibilities
 
-- **Purchase order (SP)** with `order_type`: `regular` (Biasa: OTC), `general` (Umum: F&B, skincare, etc.), `precursor`, `oot`, `psychotropic`, `narcotic`, `medical_device` (Alkes). Numbering is a separate sequence per `order_type` per store. Printable (browser print) with store and APJ details.
+- **Purchase order (SP)** with `order_type`: `regular` (Biasa: OTC), `general` (Umum: F&B, skincare, etc.), `precursor`, `oot`, `psychotropic`, `narcotic`, `medical_device` (Alkes). Numbering is a separate sequence per `order_type` per company. Printable (browser print) with company and APJ details.
 - **Goods receipt:** batch number and expiry date are **mandatory** for batch-tracked products; a receipt without them is rejected. Creates stock movements (`inventory`) and a payable (`finance`) in one transaction.
 - **Supplier invoice (faktur PBF)** matched to the receipt; payable in `finance`.
 - **Returns** to the supplier create reversing stock movements.

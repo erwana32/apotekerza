@@ -10,7 +10,7 @@ The developer's goal is that the application works like Odoo (see `docs/architec
 ## Decision
 
 1. **Document states.** Every transactional document (purchase order/SP, goods receipt, supplier invoice, sale, journal entry, stock take, purchase plan; for a purchase plan `confirmed` means converted into SP(s)) has a status from one shared vocabulary: `draft`, `confirmed`, `posted`, `cancelled`. Each document type's module doc lists which of these it uses and the allowed transitions. A **cashier session** is not a document in this sense: it has its own lifecycle `open` → `closed`, defined in `docs/modules/pos.md`. A `draft` can be edited and deleted; once `confirmed` or `posted` the document is immutable. **Cancelling is a reversing document** (reversing journal, reversing stock movement), never a deletion or an edit, consistent with ADR-0004. A draft never creates journal lines or stock movements.
-2. **Sequence numbers.** The server assigns a document number when the document leaves `draft` (confirmed or posted), from a sequence per document type per store. SP sequences are per `order_type`. Number formats are set in each phase's PRD.
+2. **Sequence numbers.** The server assigns a document number when the document leaves `draft` (confirmed or posted), from a sequence per document type per company. SP sequences are per `order_type`. Number formats are set in each phase's PRD.
 3. **Screens.** Every resource has a **list view** (search, filters, grouping, CSV export, print) and a **form view** for the record, as in Odoo. There is no kanban view.
 4. **Record history.** Each document page shows its history (who did what, when, and what changed), built on the audit trail of ADR-0007. This is the equivalent of Odoo's chatter without messages or attachments. A simple version arrives in Phase 2.
 5. **No installable modules.** Unlike Odoo, all modules are always present in the single binary. Features that need switching are settings, added only when needed.
@@ -31,3 +31,5 @@ The developer's goal is that the application works like Odoo (see `docs/architec
 ## Change log
 
 - 2026-11-26: decided; cashier session excluded from the shared document statuses.
+- 2026-11-26: clarified scope after Phase 1.2 — the lifecycle and server-assigned numbers apply to transactional documents only. Identity records (`users`, `access_groups`, `sessions`) are master records: edited in place while active and deactivated with `is_active`, never deleted.
+- 2026-11-27: document number sequences are per company instead of per store, after ADR-0001 moved to `company_id` only.

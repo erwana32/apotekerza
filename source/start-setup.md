@@ -106,7 +106,7 @@ Update this table when a phase or prompt is finished. Current decisions live in 
 ```text
 Initialise the repository structure described in AGENTS.md and docs/architecture.md; do not create business modules yet.
 - git init (do not commit), keep the existing files.
-- apps/backend: go.mod with module path <GO_MODULE_PATH>, Go 1.25, internal/platform/ placeholder packages.
+- apps/backend: go.mod with module path <GO_MODULE_PATH>, the Go version you pin (1.26 now; keep deploy/Dockerfile.backend on the same version), internal/platform/ placeholder packages.
 - pnpm workspace at the root: apps/web (Vite + React + TypeScript + Tailwind + shadcn/ui) and packages/api-client (generated client, with a generate script).
 - Keep the skeleton minimal. The root Makefile expects these names: package scripts `lint` and `test` in apps/web, a `generate` script in packages/api-client, and `go generate ./...` directives in apps/backend. Make the code match the Makefile, or fix the Makefile if it is wrong, and make sure make lint and make test work (they currently skip missing parts).
 Plan first, then wait for my OK.
@@ -165,7 +165,7 @@ In internal/platform add: money (decimal wrapper, JSON as decimal string, roundi
 
 ```text
 Implement module identity per docs/modules/identity.md and docs/adr/0007-access-groups-permissions.md.
-- Migration for the identity tables (prefix identity_, one shared schema, ADR-0001): users, access_groups, group_permissions, user_groups, sessions, and an append-only audit_log (block UPDATE/DELETE with a trigger); the audit_log is also the source of the per-document history (ADR-0010).
+- Migration for the identity tables (prefix identity_, one shared schema, ADR-0001). Scope is company_id only: identity_users and identity_audit_log carry company_id; identity_access_groups is global (no company_id, unique name); identity_group_permissions, identity_user_groups, and identity_sessions carry no scope column; username is unique across the installation; the Administrator seed needs no company id: users, access_groups, group_permissions, user_groups, sessions, and an append-only audit_log (block UPDATE/DELETE with a trigger); the audit_log is also the source of the per-document history (ADR-0010).
 - argon2id password hashing, cookie sessions (HttpOnly, Secure, SameSite).
 - Permission registry built from every x-permission in api/openapi.yaml; seed the built-in group "Administrator" with all permissions.
 - Endpoints (spec first): login, logout, me, users CRUD, access groups CRUD, list permissions, read audit log.
@@ -184,7 +184,7 @@ In apps/web build the app shell and identity screens: BaseLayout (with the compa
 
 ```text
 Implement module masterdata per docs/modules/masterdata.md.
-- Tables masterdata_*: stores (one seeded row; ask me for the store name, licence number, and APJ name, and use invented placeholders in seeds and tests, never real data), contacts (supplier incl. PBF, customer), units and tiered unit conversions (box -> strip -> tablet), tax rules (configurable rate, taxable flag per product), products (name, product_type drug/medical_device/general_goods, drug_class, tracks_batch, default rack, min_stock, max_stock, barcode(s), tax setting).
+- Tables masterdata_*: companies (the pharmacy; one seeded row with a documented fixed default id and empty parent_id, optional parent_id for branches later; ask me for the name, licence number, and APJ name, and use invented placeholders in seeds and tests, never real data; add the foreign key from identity_users.company_id to it), contacts (supplier incl. PBF, customer), units and tiered unit conversions (box -> strip -> tablet), tax rules (configurable rate, taxable flag per product), products (name, product_type drug/medical_device/general_goods, drug_class, tracks_batch, default rack, min_stock, max_stock, barcode(s), tax setting).
 - Patients and doctors are NOT here.
 - Endpoints spec-first with permissions masterdata.*.
 - module.go: GetProduct, ListProducts, GetUnitConversion, GetContact, GetStore, GetTaxRule.
@@ -301,7 +301,7 @@ Build accounts payable per supplier (PBF) with ageing, supplier payments, and ca
 **Prompt 5.1: purchase orders (SP)**
 
 ```text
-Build the purchase order (SP) per docs/modules/purchase.md: order_type regular, general, precursor, oot, psychotropic, narcotic, medical_device; a separate number sequence per type per store; printable (browser print, Indonesian text, store and APJ details); a status field that leaves room for a future approval step. Do NOT build approval now. Link goods receipt to an SP. Use the ADR-0010 statuses for the SP (draft, confirmed, cancelled); how much of a confirmed SP is received comes from the goods receipts, not from extra statuses, so quantity on order can be computed later.
+Build the purchase order (SP) per docs/modules/purchase.md: order_type regular, general, precursor, oot, psychotropic, narcotic, medical_device; a separate number sequence per type per company; printable (browser print, Indonesian text, company and APJ details); a status field that leaves room for a future approval step. Do NOT build approval now. Link goods receipt to an SP. Use the ADR-0010 statuses for the SP (draft, confirmed, cancelled); how much of a confirmed SP is received comes from the goods receipts, not from extra statuses, so quantity on order can be computed later.
 ```
 
 **Prompt 5.2: Defecta, cart, and purchase plan**
