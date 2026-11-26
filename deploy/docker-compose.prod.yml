@@ -1,0 +1,26 @@
+# Production override. Use together with the base file:
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml up -d
+#
+# Requires deploy/.env (never committed) with POSTGRES_DB, POSTGRES_USER,
+# POSTGRES_PASSWORD, APP_DOMAIN, and CADDYFILE=Caddyfile. The base file's
+# dev-only password fallback must never be used in production.
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in deploy/.env}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in deploy/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+
+  migrate:
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:?set POSTGRES_USER in deploy/.env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}@postgres:5432/${POSTGRES_DB:?set POSTGRES_DB in deploy/.env}?sslmode=disable
+      APP_ENV: production
+
+  backend:
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:?set POSTGRES_USER in deploy/.env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}@postgres:5432/${POSTGRES_DB:?set POSTGRES_DB in deploy/.env}?sslmode=disable
+      APP_ENV: production
+
+  caddy:
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN in deploy/.env}

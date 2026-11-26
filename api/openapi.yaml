@@ -1,0 +1,91 @@
+openapi: 3.1.0
+info:
+  title: Apotekerza API
+  version: 0.1.0
+  description: API contract for the apotekerza pharmacy ERP. Money and quantities are decimal strings, never JSON numbers.
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+paths:
+  /api/v1/health:
+    get:
+      operationId: GetHealth
+      summary: Report that the API process is serving requests
+      description: Public liveness endpoint; it requires no session. The /healthz path is a separate operational probe outside this contract.
+      x-permission: platform.health.read
+      x-public: true
+      responses:
+        '200':
+          description: The API process is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        default:
+          $ref: '#/components/responses/Error'
+
+components:
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of items in a page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor returned by the previous page
+      schema:
+        type: string
+
+  schemas:
+    Error:
+      type: object
+      description: Stable error shape. message is English for developers; the frontend maps code to Indonesian text.
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Stable UPPER_SNAKE error code
+          example: INSUFFICIENT_STOCK
+        message:
+          type: string
+          description: English message for developers
+        details:
+          type: object
+          additionalProperties: true
+
+    Money:
+      type: string
+      pattern: '^-?[0-9]+(\.[0-9]{1,2})?$'
+      description: Decimal string for money, at most two decimals
+      example: '12500.00'
+
+    Quantity:
+      type: string
+      pattern: '^-?[0-9]+(\.[0-9]{1,4})?$'
+      description: Decimal string for item quantities, at most four decimals
+      example: '12.5000'
+
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+
+  responses:
+    Error:
+      description: The request failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

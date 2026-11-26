@@ -17,6 +17,7 @@ Browser (React SPA) --HTTPS--> Caddy --/api/*--> backend (Go, one binary) --> Po
 - **Spec-first API contract:** `api/openapi.yaml` generates the Go server and the TypeScript client. ADR-0002.
 - **Data access:** `pgx` + `sqlc`, SQL migrations with `goose`, no ORM. ADR-0003.
 - **Deployment:** one VPS, Docker Compose (`caddy`, `backend`, `postgres`). Caddy handles TLS, reverse proxy, and static files.
+- **Phase 0 tooling:** stdlib `net/http`, `slog`, ESLint + TypeScript strict + Vitest + Playwright, module path `github.com/erwana32/apotekerza`. ADR-0010. The decimal library (`shopspring/decimal`) is decided in ADR-0010 and introduced with `platform/money` in Phase 1.1.
 
 ## 3. Modules and dependencies
 
@@ -59,7 +60,7 @@ Version 1 is online-only. Accepted risk: the cashier cannot sell while the inter
 
 ## 6. Access control
 
-Permissions are `<module>.<resource>.<action>`. **Access groups** are created by the Administrator; a user may hold several groups and permissions are the union. Version 1 ships one built-in group, "Administrator" (all permissions, still recorded in the audit trail). Dedicated permissions guard sensitive data: `inventory.cost.read`, `pharmacy.patient.read`, `pos.sale.override_batch`. The backend checks permissions on every endpoint; the frontend hides menus accordingly. ADR-0007.
+Permissions are `<module>.<resource>.<action>`. **Access groups** are created by the Administrator; a user may hold several groups and permissions are the union. Version 1 ships one built-in group, "Administrator" (all permissions, still recorded in the audit trail). Dedicated permissions guard sensitive data: `inventory.cost.read`, `pharmacy.patient.read`, `pos.sale.override_batch`. The backend checks permissions on every endpoint; the frontend hides menus accordingly. ADR-0007. Exception: `GET /api/v1/health` is a cross-cutting infrastructure operation with `platform.health.read` and `x-public: true`; `platform` is not a business module. `GET /healthz` is a separate operational liveness probe outside the API contract.
 
 ## 7. Version 1 reports
 
