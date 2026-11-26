@@ -1,0 +1,129 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    - depguard
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    depguard:
+      rules:
+        identity:
+          files: ["**/internal/identity/**"]
+          list-mode: lax
+          allow:
+            - github.com/erwana32/apotekerza/internal/identity$
+            - github.com/erwana32/apotekerza/internal/identity/
+            - github.com/erwana32/apotekerza/internal/platform/
+            - github.com/erwana32/apotekerza/internal/masterdata$
+            - github.com/erwana32/apotekerza/internal/inventory$
+            - github.com/erwana32/apotekerza/internal/finance$
+            - github.com/erwana32/apotekerza/internal/purchase$
+            - github.com/erwana32/apotekerza/internal/pos$
+            - github.com/erwana32/apotekerza/internal/pharmacy$
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/
+              desc: "Call another module only through its public module.go package (docs/architecture.md)"
+        masterdata:
+          files: ["**/internal/masterdata/**"]
+          list-mode: lax
+          allow:
+            - github.com/erwana32/apotekerza/internal/masterdata$
+            - github.com/erwana32/apotekerza/internal/masterdata/
+            - github.com/erwana32/apotekerza/internal/platform/
+            - github.com/erwana32/apotekerza/internal/identity$
+            - github.com/erwana32/apotekerza/internal/inventory$
+            - github.com/erwana32/apotekerza/internal/finance$
+            - github.com/erwana32/apotekerza/internal/purchase$
+            - github.com/erwana32/apotekerza/internal/pos$
+            - github.com/erwana32/apotekerza/internal/pharmacy$
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/
+              desc: "Call another module only through its public module.go package (docs/architecture.md)"
+        inventory:
+          files: ["**/internal/inventory/**"]
+          list-mode: lax
+          allow:
+            - github.com/erwana32/apotekerza/internal/inventory$
+            - github.com/erwana32/apotekerza/internal/inventory/
+            - github.com/erwana32/apotekerza/internal/platform/
+            - github.com/erwana32/apotekerza/internal/identity$
+            - github.com/erwana32/apotekerza/internal/masterdata$
+            - github.com/erwana32/apotekerza/internal/finance$
+            - github.com/erwana32/apotekerza/internal/purchase$
+            - github.com/erwana32/apotekerza/internal/pos$
+            - github.com/erwana32/apotekerza/internal/pharmacy$
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/
+              desc: "Call another module only through its public module.go package (docs/architecture.md)"
+        finance:
+          files: ["**/internal/finance/**"]
+          list-mode: lax
+          allow:
+            - github.com/erwana32/apotekerza/internal/finance$
+            - github.com/erwana32/apotekerza/internal/finance/
+            - github.com/erwana32/apotekerza/internal/platform/
+            - github.com/erwana32/apotekerza/internal/identity$
+            - github.com/erwana32/apotekerza/internal/masterdata$
+            - github.com/erwana32/apotekerza/internal/inventory$
+            - github.com/erwana32/apotekerza/internal/purchase$
+            - github.com/erwana32/apotekerza/internal/pos$
+            - github.com/erwana32/apotekerza/internal/pharmacy$
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/
+              desc: "Call another module only through its public module.go package (docs/architecture.md)"
+        purchase:
+          files: ["**/internal/purchase/**"]
+          list-mode: lax
+          allow:
+            - github.com/erwana32/apotekerza/internal/purchase$
+            - github.com/erwana32/apotekerza/internal/purchase/
+            - github.com/erwana32/apotekerza/internal/platform/
+            - github.com/erwana32/apotekerza/internal/identity$
+            - github.com/erwana32/apotekerza/internal/masterdata$
+            - github.com/erwana32/apotekerza/internal/inventory$
+            - github.com/erwana32/apotekerza/internal/finance$
+            - github.com/erwana32/apotekerza/internal/pos$
+            - github.com/erwana32/apotekerza/internal/pharmacy$
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/
+              desc: "Call another module only through its public module.go package (docs/architecture.md)"
+        pos:
+          files: ["**/internal/pos/**"]
+          list-mode: lax
+          allow:
+            - github.com/erwana32/apotekerza/internal/pos$
+            - github.com/erwana32/apotekerza/internal/pos/
+            - github.com/erwana32/apotekerza/internal/platform/
+            - github.com/erwana32/apotekerza/internal/identity$
+            - github.com/erwana32/apotekerza/internal/masterdata$
+            - github.com/erwana32/apotekerza/internal/inventory$
+            - github.com/erwana32/apotekerza/internal/finance$
+            - github.com/erwana32/apotekerza/internal/purchase$
+            - github.com/erwana32/apotekerza/internal/pharmacy$
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/
+              desc: "Call another module only through its public module.go package (docs/architecture.md)"
+        pharmacy:
+          files: ["**/internal/pharmacy/**"]
+          list-mode: lax
+          allow:
+            - github.com/erwana32/apotekerza/internal/pharmacy$
+            - github.com/erwana32/apotekerza/internal/pharmacy/
+            - github.com/erwana32/apotekerza/internal/platform/
+            - github.com/erwana32/apotekerza/internal/identity$
+            - github.com/erwana32/apotekerza/internal/masterdata$
+            - github.com/erwana32/apotekerza/internal/inventory$
+            - github.com/erwana32/apotekerza/internal/finance$
+            - github.com/erwana32/apotekerza/internal/purchase$
+            - github.com/erwana32/apotekerza/internal/pos$
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/
+              desc: "Call another module only through its public module.go package (docs/architecture.md)"

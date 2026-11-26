@@ -1,4 +1,4 @@
-.PHONY: help gen gen-check lint test test-integration check-naming check dev-up dev-down
+.PHONY: help gen gen-check lint test test-integration test-e2e check-naming check dev-up dev-down
 
 BACKEND_DIR := apps/backend
 WEB_DIR := apps/web
@@ -18,7 +18,7 @@ gen-check: gen ## Fail if generated code is out of sync with what is committed
 	else echo "skip: not a git repo"; fi
 
 lint: ## Lint Go and web
-	@if [ -f $(BACKEND_DIR)/go.mod ]; then (cd $(BACKEND_DIR) && go vet ./... && if command -v golangci-lint >/dev/null 2>&1; then golangci-lint run; else echo "golangci-lint not installed, skipped"; fi); else echo "skip: apps/backend not created yet"; fi
+	@if [ -f $(BACKEND_DIR)/go.mod ]; then (cd $(BACKEND_DIR) && go vet ./... && go tool golangci-lint run ./...); else echo "skip: apps/backend not created yet"; fi
 	@if [ -f $(WEB_DIR)/package.json ]; then pnpm --filter ./$(WEB_DIR) run lint; else echo "skip: apps/web not created yet"; fi
 
 test: ## Unit tests for Go and web (no integration tests)
@@ -27,6 +27,9 @@ test: ## Unit tests for Go and web (no integration tests)
 
 test-integration: ## Go integration tests (real PostgreSQL via testcontainers, needs Docker)
 	@if [ -f $(BACKEND_DIR)/go.mod ]; then (cd $(BACKEND_DIR) && go test -tags=integration ./...); else echo "skip: apps/backend not created yet"; fi
+
+test-e2e: ## Playwright smoke tests (needs browsers: pnpm exec playwright install chromium)
+	@if [ -f $(WEB_DIR)/package.json ]; then pnpm --filter ./$(WEB_DIR) run test:e2e; else echo "skip: apps/web not created yet"; fi
 
 check-naming: ## Check file naming rules
 	@bash scripts/check-naming.sh

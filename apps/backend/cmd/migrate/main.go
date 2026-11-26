@@ -35,7 +35,7 @@ func run(dir string) error {
 	if err != nil {
 		return fmt.Errorf("migrate: open database: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	if err := goose.SetDialect("postgres"); err != nil {
 		return fmt.Errorf("migrate: dialect: %w", err)

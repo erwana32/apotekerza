@@ -18,6 +18,6 @@ func NewHealthHandler() nethttp.Handler {
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(nethttp.StatusOK)
-		fmt.Fprint(w, "ok\n")
+		_, _ = fmt.Fprint(w, "ok\n")
 	})
 }
