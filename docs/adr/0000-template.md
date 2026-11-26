@@ -1,7 +1,7 @@
 # NNNN. Title of the decision
 
-- **Status:** Proposed | Accepted | Superseded by NNNN
-- **Date:** YYYY-MM-DD
+- **Status:** Proposed | Accepted
+- **Date:** YYYY-MM-DD (date of the decision)
 
 ## Context
 
@@ -18,3 +18,7 @@ What becomes easier, what becomes harder, and what we accept as a risk.
 ## Alternatives considered
 
 Each alternative with the main reason it was not chosen.
+
+## Change log
+
+- YYYY-MM-DD: what changed and why (add a line here whenever the decision is changed; the sections above always describe the current decision).

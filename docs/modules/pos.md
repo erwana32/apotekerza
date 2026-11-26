@@ -4,11 +4,11 @@ Cashier sessions, sales, payments per channel, voids, and receipts.
 
 - **Status:** Planned
 - **Depends on:** `masterdata`, `inventory`, `finance`
-- **Schema:** `pos`
+- **Table prefix:** `pos_` (one schema, ADR-0001)
 
 ## Responsibilities
 
-- **Cashier session:** open and close a shift with a cash reconciliation difference.
+- **Cashier session:** open and close a shift with a cash reconciliation difference. Its lifecycle is `open` → `closed` (not the document statuses of ADR-0010).
 - **Sale:** lines (product, unit, quantity, price, discount), document-level charges (`embalase_fee`, `service_fee`, shipping, additional cost, `rounding_amount`), discount, tax. Stock leaves by FEFO automatically (a setting; manual batch choice needs `pos.sale.override_batch`).
 - **Payments** split across configurable channels (cash, transfer, QRIS, debit, ...). The channel list is data, extensible later (credit is deferred).
 - **Void:** a reversing document with reversing stock movements and journal. A sale is never deleted.

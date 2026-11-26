@@ -24,7 +24,7 @@ Follow teaching mode in `AGENTS.md`. Present the module's responsibilities, its 
    apps/backend/internal/<module>/{domain,app,httpapi,store/queries}
    ```
 2. Create the root files: `module.go` (public interface: only the functions other modules need), `errors.go` (domain errors).
-3. Create a migration that starts the module's schema (skill `add-migration`): `CREATE SCHEMA <module>;`.
+3. Decide the module's table prefix (`<module>_`). There is no per-module schema (ADR-0001); the first migration creates the module's first tables (skill `add-migration`).
 4. Register the module in the application wiring (dependency injection in `internal/platform`). Wire only through the public interfaces of other modules.
 5. Add the module's permissions to the permission registry (every `x-permission` in `api/openapi.yaml`).
 6. Create `docs/modules/<module>.md` (responsibilities, depends on, permissions, error codes, deferred) and set its status in `docs/architecture.md`.
@@ -33,5 +33,5 @@ Follow teaching mode in `AGENTS.md`. Present the module's responsibilities, its 
 ## Rules
 
 - File prefixes and folders follow `docs/conventions/naming.md` (`model_` in `domain/`, `service_` in `app/`, `handler_`/`mapper_` in `httpapi/`, `repo_` in `store/`).
-- Never read another module's tables. Use its `module.go` or a `v_` view it publishes.
+- In Go, call another module only through its `module.go`. In SQL, other modules' tables may be read and joined (ADR-0001).
 - Cross-module calls happen inside the caller's transaction.

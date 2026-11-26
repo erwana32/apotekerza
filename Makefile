@@ -8,28 +8,26 @@ help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 
 gen: ## Generate code from api/openapi.yaml and SQL queries
-	@if [ -f $(BACKEND_DIR)/go.mod ]; then (cd $(BACKEND_DIR) && go generate ./...); else echo "skip: apps/backend not created yet"; fi
-	@if [ -f packages/api-client/package.json ]; then pnpm --filter ./packages/api-client run generate; else echo "skip: packages/api-client not created yet"; fi
+	@cd $(BACKEND_DIR) && go generate ./...
+	@pnpm --filter ./packages/api-client run generate
 
 gen-check: gen ## Fail if generated code is out of sync with what is committed
-	@if git rev-parse --git-dir >/dev/null 2>&1; then \
-		git diff --exit-code -- ':(glob)**/gen/**' packages/api-client/src/generated || \
-		{ echo "Generated code is out of sync. Run make gen and commit the result."; exit 1; }; \
-	else echo "skip: not a git repo"; fi
+	@git diff --exit-code -- ':(glob)**/gen/**' packages/api-client/src/generated || \
+		{ echo "Generated code is out of sync. Run make gen and commit the result."; exit 1; }
 
 lint: ## Lint Go and web
-	@if [ -f $(BACKEND_DIR)/go.mod ]; then (cd $(BACKEND_DIR) && go vet ./... && go tool golangci-lint run ./...); else echo "skip: apps/backend not created yet"; fi
-	@if [ -f $(WEB_DIR)/package.json ]; then pnpm --filter ./$(WEB_DIR) run lint; else echo "skip: apps/web not created yet"; fi
+	@cd $(BACKEND_DIR) && go vet ./... && go tool golangci-lint run ./...
+	@pnpm --filter ./$(WEB_DIR) run lint
 
 test: ## Unit tests for Go and web (no integration tests)
-	@if [ -f $(BACKEND_DIR)/go.mod ]; then (cd $(BACKEND_DIR) && go test ./...); else echo "skip: apps/backend not created yet"; fi
-	@if [ -f $(WEB_DIR)/package.json ]; then pnpm --filter ./$(WEB_DIR) run test; else echo "skip: apps/web not created yet"; fi
+	@cd $(BACKEND_DIR) && go test ./...
+	@pnpm --filter ./$(WEB_DIR) run test
 
 test-integration: ## Go integration tests (real PostgreSQL via testcontainers, needs Docker)
-	@if [ -f $(BACKEND_DIR)/go.mod ]; then (cd $(BACKEND_DIR) && go test -tags=integration ./...); else echo "skip: apps/backend not created yet"; fi
+	@cd $(BACKEND_DIR) && go test -tags=integration ./...
 
 test-e2e: ## Playwright smoke tests (needs browsers: pnpm exec playwright install chromium)
-	@if [ -f $(WEB_DIR)/package.json ]; then pnpm --filter ./$(WEB_DIR) run test:e2e; else echo "skip: apps/web not created yet"; fi
+	@pnpm --filter ./$(WEB_DIR) run test:e2e
 
 check-naming: ## Check file naming rules
 	@bash scripts/check-naming.sh
@@ -37,7 +35,7 @@ check-naming: ## Check file naming rules
 check: check-naming gen-check lint test ## Gate before merging
 
 dev-up: ## Start the local dev environment
-	@if [ -f $(COMPOSE) ]; then docker compose -f $(COMPOSE) up -d --build; else echo "skip: $(COMPOSE) not created yet"; fi
+	@docker compose -f $(COMPOSE) up -d --build
 
 dev-down: ## Stop the local dev environment (data volumes are kept)
-	@if [ -f $(COMPOSE) ]; then docker compose -f $(COMPOSE) down; else echo "skip: $(COMPOSE) not created yet"; fi
+	@docker compose -f $(COMPOSE) down

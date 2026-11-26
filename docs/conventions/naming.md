@@ -25,12 +25,12 @@ Files are `snake_case.go`, **prefixed by role**, then the entity or use case.
 
 ## 2. Database
 
-- One Postgres schema per module (`inventory.stock_batches`).
-- Tables: plural `snake_case`. Columns: `snake_case`.
+- One schema (`public`). Every table is named `<module>_<plural_name>` so the owner is visible: `inventory_stock_batches`, `finance_journal_entries`, `masterdata_products` (ADR-0001).
+- Tables: module prefix + plural `snake_case`. Columns: `snake_case`.
 - Primary key `id` (UUIDv7). Foreign key `<entity>_id`. Always `store_id` and `company_id` on business tables.
 - Timestamps: `created_at`, `updated_at` (`timestamptz`). Client-origin time: `client_created_at`.
 - Money: `*_amount` (`numeric(18,2)`). Quantities: `quantity` or `*_quantity` (`numeric(18,4)`).
-- Read-only contract views: `v_<name>` (e.g. `inventory.v_product_stock`).
+- Optional read-only views for reports: `v_<module>_<name>` (e.g. `v_inventory_product_stock`). Not a required contract.
 - Migrations: `<timestamp>_<module>_<description>.sql`, e.g. `20261124120000_inventory_create_stock_batches.sql`. Add-only.
 
 ## 3. API (OpenAPI)

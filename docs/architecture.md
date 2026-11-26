@@ -6,6 +6,8 @@ This document describes the shape of apotekerza, the boundaries between modules,
 
 A staged ERP for an Indonesian pharmacy (apotek). Version 1 serves **one pharmacy** (one `store`) per installation: Finance, Inventory, Purchasing, POS, and the pharmacy service (prescriptions). The schema already carries `store_id` and `company_id` so that multiple pharmacies and multiple companies can be added later without a large migration.
 
+**Working model: similar to Odoo** (developer's goal, 2026-11-26). The module set, the single schema with module-prefixed tables (ADR-0001), access groups, double-entry accounting, per-batch stock with FEFO, cashier sessions, and purchase → receipt → payable all follow how Odoo works. Documents follow one lifecycle (`draft → confirmed/posted → cancelled`, cancel = reversal, server-assigned sequence numbers), every resource has a list view and a form view, and each document shows its history (ADR-0010). Modules are not installable: all are always in the binary. Odoo behaviours beyond these are decided per phase in the PRDs; until then, do not assume them.
+
 ## 2. Overview
 
 ```
@@ -13,11 +15,11 @@ Browser (React SPA) --HTTPS--> Caddy --/api/*--> backend (Go, one binary) --> Po
                                   `-- static web files
 ```
 
-- **Modular monolith:** one Go binary, one PostgreSQL database, **one Postgres schema per module**. ADR-0001.
+- **Modular monolith:** one Go binary, one PostgreSQL database, **one schema with tables prefixed by module (Odoo style)**. ADR-0001.
 - **Spec-first API contract:** `api/openapi.yaml` generates the Go server and the TypeScript client. ADR-0002.
 - **Data access:** `pgx` + `sqlc`, SQL migrations with `goose`, no ORM. ADR-0003.
 - **Deployment:** one VPS, Docker Compose (`caddy`, `backend`, `postgres`). Caddy handles TLS, reverse proxy, and static files.
-- **Phase 0 tooling:** stdlib `net/http`, `slog`, ESLint + TypeScript strict + Vitest + Playwright, module path `github.com/erwana32/apotekerza`. ADR-0010. The decimal library (`shopspring/decimal`) is decided in ADR-0010 and introduced with `platform/money` in Phase 1.1.
+- **Phase 0 tooling:** stdlib `net/http`, `slog`, ESLint + TypeScript strict + Vitest + Playwright, module path `github.com/erwana32/apotekerza`. ADR-0009. The decimal library (`shopspring/decimal`) is decided in ADR-0009 and introduced with `platform/money` in Phase 1.1.
 
 ## 3. Modules and dependencies
 
@@ -36,10 +38,10 @@ Details per module: `docs/modules/<module>.md`.
 ### Module boundary rules
 
 1. A module imports only the public package of another module (`internal/<module>`, containing `module.go`). No imports into another module's `domain/`, `app/`, `httpapi/`, or `store/`.
-2. **Never read another module's tables or schema.** Composite views use the public interfaces of both modules or a **read-only SQL view prefixed `v_`** published by the owning module as a contract (e.g. `inventory.v_product_stock`).
-3. `masterdata` is the only shared kernel every module may import.
+2. **SQL is free across modules (ADR-0001).** One schema, tables prefixed by module (`inventory_stock_batches`). Queries may read, join, and write other modules' tables and foreign keys may cross modules, as in Odoo. Append-only ledger and stock tables are protected by triggers (ADR-0004), not by module boundaries. Posting through the owner's functions (`finance.PostJournal`, `inventory.Receive`) is the convention so their checks run.
+3. `masterdata` is the only shared kernel every module may import in Go.
 4. No circular dependencies. The direction is the table above. `pos` knows nothing about prescriptions: it only stores a neutral reference (`prescription_ref`). `pharmacy` creates transactions through the `pos` interface.
-5. Enforcement: import-rule lint + `make check`. A violation is an architecture bug.
+5. Enforcement: Go import-rule lint + `make check`. A Go import violation is an architecture bug. Direct writes that skip an owner's checks are caught in review (`review-change`).
 
 ### Cross-module transactions
 
@@ -87,4 +89,4 @@ See `deploy/AGENTS.md`. In short: local dev and production, secrets in the serve
 
 ## 11. AI tooling
 
-OpenCode v2. `AGENTS.md` is canonical (root and nested), skills in `.opencode/skills/`, configuration and permissions in `opencode.json`, read-only `plan` and `reviewer` agents. ADR-0008, ADR-0009.
+OpenCode v2. `AGENTS.md` is canonical (root and nested), skills in `.opencode/skills/`, configuration and permissions in `opencode.json`, read-only `plan` and `reviewer` agents. ADR-0008, ADR-0008.

@@ -4,7 +4,7 @@ The pharmacy service: patients, doctors, prescriptions, compounding, drug labels
 
 - **Status:** Planned
 - **Depends on:** `masterdata`, `inventory`, `pos`
-- **Schema:** `pharmacy`
+- **Table prefix:** `pharmacy_` (one schema, ADR-0001)
 
 All regulatory points below are **assumptions** until confirmed: `Needs APJ confirmation`.
 

@@ -32,5 +32,5 @@ Do not write code yet. Follow teaching mode in `AGENTS.md`. Show a worked FEFO e
 ## Never
 
 - Update the stock book.
-- Compute available stock by reading another module's tables.
+- Compute available stock by hand in another module: use the inventory functions or the agreed stock query, so expired batches are excluded the same way everywhere.
 - Sell an expired batch.

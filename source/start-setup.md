@@ -1,6 +1,6 @@
 # Start setup: phased prompts
 
-Copy-paste prompts for building apotekerza with an AI coding tool, one phase and one vertical slice at a time. The code is written in this repository, which also holds the rules the AI must follow (`AGENTS.md`, `docs/`, `.opencode/skills/`). Any AI tool can be used, as long as its working directory is this repository.
+Copy-paste prompts for building apotekerza with an AI coding tool, one phase and one vertical slice at a time. The code is written in this repository, which also holds the rules the AI must follow (`AGENTS.md`, `docs/`, `.opencode/skills/`). The AI tool is OpenCode (ADR-0008) and its working directory must be this repository. The app should work like Odoo (`docs/architecture.md`, section 1).
 
 ## How to use
 
@@ -11,9 +11,10 @@ Copy-paste prompts for building apotekerza with an AI coding tool, one phase and
 5. After each slice run the **Review prompt**, fix findings, then commit yourself. The AI never pushes and always asks before committing.
 6. If the AI breaks a hard rule from `AGENTS.md`, stop it and paste the **Drift prompt**.
 7. **Before each phase, write its PRD** in `docs/prd/phase-<N>-<name>.md` (goal, scope, screens, rules, acceptance criteria). The project is built step by step, so detail each phase when you reach it. The AI reads the PRD first; where it disagrees with a module doc, the PRD wins and the AI updates the module doc.
-8. Replace `<...>` placeholders before pasting. Items marked **Decision** are yours to make first.
+8. **ADRs describe the current decision.** When you change a decision, the AI edits that ADR and adds a dated line to its Change log (no chain of superseded ADRs). It creates a new ADR only for a new topic.
+9. Replace `<...>` placeholders before pasting. Items marked **Decision** are yours to make first.
 
-If your tool does not read `AGENTS.md` automatically, tell it to read `AGENTS.md` and the files named in the preamble before anything else.
+OpenCode reads `AGENTS.md` automatically; the preamble below makes it read the rest.
 
 ## Recurring prompts
 
@@ -21,12 +22,12 @@ If your tool does not read `AGENTS.md` automatically, tell it to read `AGENTS.md
 
 ```text
 You are working in the apotekerza repository (a staged ERP for an Indonesian pharmacy).
-Before doing anything, read in this order: AGENTS.md, the PRD of the current phase in docs/prd/ if it exists (it overrides provisional assumptions in the module docs; report any difference you find), the nested AGENTS.md of every folder you will touch, docs/architecture.md, docs/conventions/naming.md, docs/glossary.md, and docs/modules/<module>.md for every module involved. Follow every hard rule in AGENTS.md.
+Before doing anything, read in this order: AGENTS.md, the PRD of the current phase in docs/prd/ if it exists (it overrides provisional assumptions in the module docs; report any difference you find), the nested AGENTS.md of every folder you will touch, docs/architecture.md, docs/conventions/naming.md, docs/glossary.md, and docs/modules/<module>.md for every module involved. Follow every hard rule in AGENTS.md. The app works like Odoo: one schema with module-prefixed tables and free SQL across modules (ADR-0001), documents with draft/confirmed/posted/cancelled statuses, server-assigned numbers, list and form views, and per-document history (ADR-0010).
 Rules of engagement:
 - Teaching mode (see AGENTS.md): plan first, then work one small step at a time. Before each step say what you will build, why, and the alternatives with your recommendation, and wait for my OK. For any table, endpoint, or posting rule, propose the design first (columns and types, constraints, indexes, relations; or path, request, response, permission, errors; or a worked example) and wait for approval. After each step explain what you built, how to verify it, and what comes next. Never run several steps on one OK.
 - Work in one vertical slice. Do not touch modules outside the slice.
 - Spec-first: change api/openapi.yaml, run make gen, then write code. Never edit generated code or existing migrations.
-- Update docs/modules/<module>.md in the same change. Write an ADR (skill write-adr) for any architecture decision.
+- Update docs/modules/<module>.md in the same change. For an architecture decision use the write-adr skill: edit the existing ADR if one covers the topic (add a Change log line), otherwise create the next ADR.
 - Run make check at the end and report the real output. Do not git push. Ask before git commit.
 - If something in the docs is ambiguous or an assumption needs APJ confirmation, ask me instead of guessing.
 ```
@@ -40,7 +41,7 @@ Explain what you just built in plain words: the purpose, how the pieces connect 
 ### Review prompt (after every slice)
 
 ```text
-Use the reviewer agent (skill review-change) to review the current diff. If your tool has no reviewer agent, read .opencode/skills/review-change/SKILL.md and apply it read-only. Review the current diff against AGENTS.md, the nested AGENTS.md files, and docs/modules/<module>.md. Report findings most severe first with path:line, the rule broken, and the consequence. Separate hard-rule violations, confident bugs, and suggestions. Do not edit anything.
+Use the reviewer agent (skill review-change) to review the current diff against AGENTS.md, the nested AGENTS.md files, and docs/modules/<module>.md. Report findings most severe first with path:line, the rule broken, and the consequence. Separate hard-rule violations, confident bugs, and suggestions. Do not edit anything.
 ```
 
 ### Fix review findings
@@ -76,6 +77,16 @@ Bug: <what happens, what should happen>. First write a failing test that reprodu
 
 ---
 
+## Progress
+
+| Phase | Status |
+|---|---|
+| 0. Repository bootstrap (0.1–0.6) | Done. Merged on `main`. Technology choices are in ADR-0009 |
+| 1. Foundation | In progress. 1.1 shared building blocks (`platform/money`, `ids`, `clock`, `pagination`, `apierror`) is on branch `slice/phase1-shared-building-blocks` |
+| 2–8 | Not started |
+
+Update this table when a phase or prompt is finished. Current decisions live in `docs/adr/` (0001 modular monolith with one schema, Odoo style; 0004 append-only ledger; 0005 stock per batch and FEFO; 0008 OpenCode and rules; 0009 Phase 0 technology; 0010 Odoo-style documents, screens, history).
+
 ## Where the code lives
 
 **Decided: the code is written in this repository** (`apotekerza`), alongside the rule kit (`AGENTS.md`, `docs/`, `.opencode/`, `opencode.json`, `Makefile`, `scripts/`, `source/`). The AI reads its rules from the working directory, so run every prompt below with this repository as the working directory. Docs and code then change together in one place.
@@ -83,6 +94,8 @@ Bug: <what happens, what should happen>. First write a failing test that reprodu
 ---
 
 ## Phase 0: Repository bootstrap
+
+**Status: done.** The prompts below are kept for reference, for example when starting another project from this kit.
 
 **Goal:** an empty but fully wired skeleton where `make check` passes and the stack runs locally. No business logic.
 
@@ -152,7 +165,7 @@ In internal/platform add: money (decimal wrapper, JSON as decimal string, roundi
 
 ```text
 Implement module identity per docs/modules/identity.md and docs/adr/0007-access-groups-permissions.md.
-- Migration for schema identity: users, access_groups, group_permissions, user_groups, sessions, and an append-only audit_log (block UPDATE/DELETE with a trigger).
+- Migration for the identity tables (prefix identity_, one shared schema, ADR-0001): users, access_groups, group_permissions, user_groups, sessions, and an append-only audit_log (block UPDATE/DELETE with a trigger); the audit_log is also the source of the per-document history (ADR-0010).
 - argon2id password hashing, cookie sessions (HttpOnly, Secure, SameSite).
 - Permission registry built from every x-permission in api/openapi.yaml; seed the built-in group "Administrator" with all permissions.
 - Endpoints (spec first): login, logout, me, users CRUD, access groups CRUD, list permissions, read audit log.
@@ -164,14 +177,14 @@ Update docs/modules/identity.md.
 **Prompt 1.3: identity frontend**
 
 ```text
-In apps/web build the app shell and identity screens: BaseLayout (with the company logo from source/logo.svg per docs/branding.md: copy it at build time into apps/web/public/brand, never redraw or recolour it; define Tailwind tokens brand.blue, brand.pink, brand.green from the logo and a darker blue that passes WCAG AA for text and buttons), login page, route guard that reads each route's permission, the nested PATHS object, menu filtered by permission, and pages to manage users and access groups (the Administrator edits permissions of a group per module/resource/action). All visible text in Indonesian; backend error codes mapped to Indonesian in shared/errorMessages. Follow apps/web/AGENTS.md and the naming rules. Vitest for logic and components, one Playwright test for login and permission-hidden menu.
+In apps/web build the app shell and identity screens: BaseLayout (with the company logo from source/logo.svg per docs/branding.md: copy it at build time into apps/web/public/brand, never redraw or recolour it; define Tailwind tokens brand.blue, brand.pink, brand.green from the logo and a darker blue that passes WCAG AA for text and buttons), login page, route guard that reads each route's permission, the nested PATHS object, menu filtered by permission, and pages to manage users and access groups, each as a list view (search, filters, CSV export) and a form view per ADR-0010 (the Administrator edits permissions of a group per module/resource/action). All visible text in Indonesian; backend error codes mapped to Indonesian in shared/errorMessages. Follow apps/web/AGENTS.md and the naming rules. Vitest for logic and components, one Playwright test for login and permission-hidden menu.
 ```
 
 **Prompt 1.4: masterdata backend**
 
 ```text
 Implement module masterdata per docs/modules/masterdata.md.
-- Schema masterdata: stores (one seeded row; ask me for the store name, licence number, and APJ name, and use invented placeholders in seeds and tests, never real data), contacts (supplier incl. PBF, customer), units and tiered unit conversions (box -> strip -> tablet), tax rules (configurable rate, taxable flag per product), products (name, product_type drug/medical_device/general_goods, drug_class, tracks_batch, default rack, min_stock, max_stock, barcode(s), tax setting).
+- Tables masterdata_*: stores (one seeded row; ask me for the store name, licence number, and APJ name, and use invented placeholders in seeds and tests, never real data), contacts (supplier incl. PBF, customer), units and tiered unit conversions (box -> strip -> tablet), tax rules (configurable rate, taxable flag per product), products (name, product_type drug/medical_device/general_goods, drug_class, tracks_batch, default rack, min_stock, max_stock, barcode(s), tax setting).
 - Patients and doctors are NOT here.
 - Endpoints spec-first with permissions masterdata.*.
 - module.go: GetProduct, ListProducts, GetUnitConversion, GetContact, GetStore, GetTaxRule.
@@ -182,7 +195,7 @@ Update docs/modules/masterdata.md.
 **Prompt 1.5: masterdata frontend**
 
 ```text
-Build the masterdata screens: product master list and form (including min_stock and max_stock, entered only in the product's smallest unit with the unit name shown next to the field, tracks_batch, rack, tiered units, tax setting), contacts, units, tax rules. This is the product master screen, not the Product List (stock joined with master) which comes in Phase 3. Indonesian UI text, id-ID number formatting, permissions on routes, tests per apps/web/AGENTS.md.
+Build the masterdata screens, each resource with a list view (search, filters, CSV export) and a form view per ADR-0010: product master list and form (including min_stock and max_stock, entered only in the product's smallest unit with the unit name shown next to the field, tracks_batch, rack, tiered units, tax setting), contacts, units, tax rules. This is the product master screen, not the Product List (stock joined with master) which comes in Phase 3. Indonesian UI text, id-ID number formatting, permissions on routes, tests per apps/web/AGENTS.md.
 ```
 
 **Exit criteria:** log in as Administrator, create a group and a user, create products with tiered units; audit log records the actions; `make check` green.
@@ -191,18 +204,18 @@ Build the masterdata screens: product master list and form (including min_stock 
 
 ## Phase 2: Walking skeleton (first vertical slice, thin across modules)
 
-**Goal:** login -> create product -> receive goods with batch and expiry -> sell at POS with FEFO -> automatic balanced journal. Everything is minimal on purpose; it proves every layer works together.
+**Goal:** login -> create product -> receive goods with batch and expiry -> sell at POS with FEFO -> automatic balanced journal. Everything is minimal on purpose; it proves every layer works together. Documents already follow ADR-0010 (draft / confirmed / posted / cancelled, immutable once confirmed or posted, server-assigned numbers, list and form views).
 
 **Prompt 2.1: finance minimal**
 
 ```text
-Implement the minimum of module finance per docs/modules/finance.md and skill post-journal: schema finance, a seeded minimal chart of accounts (cash, inventory, accounts payable, VAT output, sales revenue, cost of goods sold), journal entries and lines (append-only via trigger), PostJournal (rejects unbalanced with JOURNAL_UNBALANCED) and ReverseJournal exposed in module.go. Integration tests: balance check, append-only, reversal. No reports yet.
+Implement the minimum of module finance per docs/modules/finance.md and skill post-journal: tables finance_*, a seeded minimal chart of accounts (cash, inventory, accounts payable, VAT output, sales revenue, cost of goods sold), journal entries and lines (append-only via trigger), PostJournal (rejects unbalanced with JOURNAL_UNBALANCED; propose whether to also add a deferred constraint trigger that rejects an unbalanced journal even when another module writes the tables directly, ADR-0004, and wait for my decision) and ReverseJournal exposed in module.go. Integration tests: balance check, append-only, reversal. No reports yet.
 ```
 
 **Prompt 2.2: inventory minimal**
 
 ```text
-Implement the minimum of module inventory per docs/modules/inventory.md, ADR-0005, and skill stock-movement: schema inventory, batches (batch number, expiry date; implicit batch when tracks_batch is false), append-only stock_movements (trigger), Receive and ReserveAndIssue (FEFO, split across batches, skip expired, INSUFFICIENT_STOCK), cost per batch, each movement posts its journal through finance in the same transaction. Table-driven unit tests for FEFO allocation and an integration test proving concurrent issues cannot oversell a batch.
+Implement the minimum of module inventory per docs/modules/inventory.md, ADR-0005, and skill stock-movement: tables inventory_*, batches (batch number, expiry date; implicit batch when tracks_batch is false), append-only stock_movements (trigger), Receive and ReserveAndIssue (FEFO, split across batches, skip expired, INSUFFICIENT_STOCK; the convention is that other modules call these instead of writing the tables directly, ADR-0004), cost per batch, each movement posts its journal through finance in the same transaction. Table-driven unit tests for FEFO allocation and an integration test proving concurrent issues cannot oversell a batch.
 ```
 
 **Prompt 2.3: purchase goods receipt (minimal)**
@@ -223,7 +236,13 @@ Implement the minimum of module pos per docs/modules/pos.md: a sale with lines, 
 Write one Playwright test for the walking skeleton: log in, create a product, receive goods with two batches of different expiry, sell more than one batch's quantity, then assert stock per batch (earliest expiry consumed first) and that the journal balances. Run it against the docker compose stack. Fix anything the test exposes.
 ```
 
-**Exit criteria:** the end-to-end test passes; `docs/modules/*.md` for the touched modules match the code (run the Docs sync prompt); `make check` green. Run the Review prompt on the whole phase.
+**Prompt 2.6: document history**
+
+```text
+Add the simple version of document history (ADR-0010): every document page shows who did what and when and what changed (status changes, edits to a draft, posting, cancelling), read from the audit trail of module identity. Write it once as a reusable component and endpoint pattern, then use it on the goods receipt and the sale. No messages or attachments.
+```
+
+**Exit criteria:** the end-to-end test passes; document history works on the goods receipt and the sale; `docs/modules/*.md` for the touched modules match the code (run the Docs sync prompt); `make check` green. Run the Review prompt on the whole phase.
 
 ---
 
@@ -232,13 +251,13 @@ Write one Playwright test for the walking skeleton: log in, create a product, re
 **Prompt 3.1: stock card and Product List**
 
 ```text
-Add the stock card per product and per batch (movement history with running balance) and the Product List: publish the read-only view inventory.v_product_stock and build the ProductListPage that joins it with masterdata through the public interfaces (no cross-schema table reads). Both support filters, CSV export, and browser print. Update docs/modules/inventory.md.
+Add the stock card per product and per batch (movement history with running balance) and the Product List: build the ProductListPage as a read query that joins the inventory_* stock tables with masterdata_products (cross-module reads are allowed, ADR-0001). Both support filters, CSV export, and browser print. Update docs/modules/inventory.md.
 ```
 
 **Prompt 3.2: expiry report and stock figures**
 
 ```text
-Add the Expiry report (expired and near-expiry, configurable threshold) with the warning shown on the stock screen and POS, with CSV export and print. Make sure the view inventory.v_product_stock exposes, per product, the stock on hand (only batches that are not expired, in the smallest unit) and the nearest expiry, because the Defecta in module purchase will read it. The Defecta itself is built in Phase 5, not here. Update docs/modules/inventory.md.
+Add the Expiry report (expired and near-expiry, configurable threshold) with the warning shown on the stock screen and POS, with CSV export and print. Make sure the stock figures are available as one reusable query (or optional view v_inventory_product_stock), per product: the stock on hand (only batches that are not expired, in the smallest unit) and the nearest expiry, because the Defecta in module purchase will read it. The Defecta itself is built in Phase 5, not here. Update docs/modules/inventory.md.
 ```
 
 **Prompt 3.3: stock take and opening balance**
@@ -282,13 +301,13 @@ Build accounts payable per supplier (PBF) with ageing, supplier payments, and ca
 **Prompt 5.1: purchase orders (SP)**
 
 ```text
-Build the purchase order (SP) per docs/modules/purchase.md: order_type regular, general, precursor, oot, psychotropic, narcotic, medical_device; a separate number sequence per type per store; printable (browser print, Indonesian text, store and APJ details); a status field that leaves room for a future approval step. Do NOT build approval now. Link goods receipt to an SP. Track SP status (draft, issued, partially received, closed, cancelled) so quantity on order can be computed later.
+Build the purchase order (SP) per docs/modules/purchase.md: order_type regular, general, precursor, oot, psychotropic, narcotic, medical_device; a separate number sequence per type per store; printable (browser print, Indonesian text, store and APJ details); a status field that leaves room for a future approval step. Do NOT build approval now. Link goods receipt to an SP. Use the ADR-0010 statuses for the SP (draft, confirmed, cancelled); how much of a confirmed SP is received comes from the goods receipts, not from extra statuses, so quantity on order can be computed later.
 ```
 
 **Prompt 5.2: Defecta, cart, and purchase plan**
 
 ```text
-Build the Defecta in module purchase exactly as described in docs/modules/purchase.md (section "Defecta, cart, and purchase plan"). Show per product: min_stock, max_stock, stock (from inventory.v_product_stock), last supplier, quantity on order, quantity in the cart, and a Buy button. Buy opens a choice of supplier and quantity and adds the row to the cart; saving the cart creates draft purchase plans automatically (one per supplier). Add the conversion of a plan into SP(s), split by supplier and order_type. Read stock only through inventory.v_product_stock and min/max through the masterdata interface (no cross-schema reads). The assumptions listed in that section are not approved yet: propose the design for each (which rows show, suggested quantity, last supplier, on order, cart scope, plan to SP split) and wait for my decision before building. CSV export and print for the list. Update docs/modules/purchase.md and docs/glossary.md.
+Build the Defecta in module purchase exactly as described in docs/modules/purchase.md (section "Defecta, cart, and purchase plan"). Show per product: min_stock, max_stock, stock (joined from the inventory_* tables), last supplier, quantity on order, quantity in the cart, and a Buy button. Buy opens a choice of supplier and quantity and adds the row to the cart; saving the cart creates draft purchase plans automatically (one per supplier). Add the conversion of a plan into SP(s), split by supplier and order_type. Read stock and min/max with joins on the inventory_* and masterdata_products tables (cross-module reads are allowed, ADR-0001). The assumptions listed in that section are not approved yet: propose the design for each (which rows show, suggested quantity, last supplier, on order, cart scope, plan to SP split) and wait for my decision before building. CSV export and print for the list. Update docs/modules/purchase.md and docs/glossary.md.
 ```
 
 **Prompt 5.3: supplier invoices, returns, payments**

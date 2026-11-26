@@ -23,6 +23,7 @@ src/
 - **Routes:** `/<module>/<resource-plural-kebab>`, add `/new`, detail `/:<entity>Id`, edit `/:<entity>Id/edit`. Never `create`/`add`, never `:id`. Paths come only from `PATHS` (e.g. `PATHS.inventory.products.detail(id)`), never as string literals in components.
 - **Permission per route:** every route declares `permission: '<module>.<resource>.<action>'`. The route guard and the menu read it. Hiding a button in the UI is not security: the backend always checks too.
 - **One `routes.tsx` per module.** There are no per-role route files: roles are access groups the Administrator can change.
+- **Screen pattern (ADR-0010):** every resource has a list view (search, filters, grouping, CSV export, print) and a form view; documents also show their history. No kanban views.
 - **Forms:** `react-hook-form` + `zod`. Schemas live in `schemas/`. Validation messages are in Indonesian.
 - **Server data:** TanStack Query. Query keys come from one function per resource (`productKeys.list(params)`), never scattered literals.
 - **UI language:** all user-visible text is Indonesian. Numbers and money are formatted `id-ID` through `shared/format`; never format by hand. Backend error codes are mapped to Indonesian messages in one place (`shared/errorMessages`).

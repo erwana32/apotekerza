@@ -38,11 +38,13 @@ Stack: Go, PostgreSQL, React (TypeScript) + Tailwind, OpenAPI, Docker Compose, C
 - `make check`: the gate before merging (naming, generated code in sync, lint, tests).
 - `make gen`: generate code from `api/openapi.yaml` and SQL queries.
 - `make test` / `make test-integration`: unit tests / integration tests (real PostgreSQL).
+- `make test-e2e`: Playwright smoke tests (needs `pnpm exec playwright install chromium` once).
+- `make dev-up` / `make dev-down`: the local Docker Compose stack (volumes are kept).
 
 ## Hard rules
 
-1. **Module boundaries.** A module calls another module only through that module's `module.go`. Never read another module's tables or schema. Composite views use public interfaces or read-only SQL views prefixed `v_` published by the owning module.
-2. **The ledger and the stock book are append-only.** Corrections and voids are reversing journals or reversing stock movements. Never `UPDATE` or `DELETE` journal or stock movement rows.
+1. **Module boundaries (ADR-0001).** In Go, a module calls another module only through that module's `module.go`, and never imports another module's `domain/`, `app/`, `httpapi/`, or `store/`. In SQL there is **one schema** and tables are prefixed by module (`inventory_stock_batches`); queries may read, join, and write tables of other modules, and foreign keys may point to any table. Prefer posting through `finance.PostJournal` and the inventory functions so their checks run (convention, not enforced).
+2. **The ledger and the stock book are append-only.** Corrections and voids are reversing journals or reversing stock movements. Never `UPDATE` or `DELETE` journal or stock movement rows; database triggers enforce it whichever module writes (ADR-0004, ADR-0001).
 3. **Money is never `float`.** Database `numeric`, Go `decimal`. Item quantities are `numeric` too.
 4. **Spec-first.** Change `api/openapi.yaml` first, run `make gen`, then write handlers and the client.
 5. **Never hand-edit** generated code (`**/gen/**`, `*.gen.go`, `packages/api-client/src/generated/**`) or existing migrations. A schema change is a new migration.
@@ -54,6 +56,7 @@ Stack: Go, PostgreSQL, React (TypeScript) + Tailwind, OpenAPI, Docker Compose, C
 11. **Do not add modules, large dependencies, or features outside the list** in `docs/architecture.md` without the developer's approval. Deferred features are listed there.
 12. **Do not invent pharmacy regulations** (narcotics, psychotropics, prescription retention, tax). Write them as assumptions and mark them `Needs APJ confirmation` in the module doc.
 13. One pharmacy is called `store` in code (table `stores`, column `store_id`).
+14. **Documents follow ADR-0010.** Status from `draft`, `confirmed`, `posted`, `cancelled`; a draft never creates journal lines or stock movements; confirmed and posted documents are immutable and cancelled by a reversing document; the server assigns the number when the document leaves `draft`.
 
 ## Read first before touching
 
@@ -80,7 +83,7 @@ Stack: Go, PostgreSQL, React (TypeScript) + Tailwind, OpenAPI, Docker Compose, C
 
 ## Documentation travels with code
 
-A behaviour change must update `docs/modules/<module>.md` in the same change. A new architecture decision needs an ADR in `docs/adr/` (skill `write-adr`). An accepted ADR is never edited: it is superseded by a new ADR that marks the old one as superseded.
+A behaviour change must update `docs/modules/<module>.md` in the same change. A new architecture decision needs an ADR in `docs/adr/` (skill `write-adr`). ADRs describe the **current** decision. When a decision changes, edit the ADR so it states the new decision and add a dated line to its Change log; do not leave a chain of superseded ADRs.
 
 ## Teaching mode (default: on)
 

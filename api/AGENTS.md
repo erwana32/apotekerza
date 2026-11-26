@@ -14,7 +14,9 @@
 - Path: `/api/v1/<module>/<resource-plural-kebab>`, e.g. `/api/v1/inventory/stock-batches`. Non-CRUD actions are noun sub-resources (`POST /api/v1/purchase/goods-receipts`), not verbs in the path.
 - `operationId`: `VerbNoun` PascalCase, **unique across the whole spec** (`ListProducts`, `ReceiveGoods`). Standard verbs: `List`, `Get`, `Create`, `Update`, `Delete`; otherwise a domain verb (`Receive`, `Post`, `Void`).
 - Schemas: PascalCase (`Product`, `CreateProductRequest`, `ProductList`). JSON properties are `camelCase`.
-- Every operation declares its permission with the extension `x-permission: <module>.<resource>.<action>`.
+- Every operation declares its permission with the extension `x-permission: <module>.<resource>.<action>`. An operation that needs no session also sets `x-public: true` (e.g. `GetHealth` uses `x-permission: platform.health.read` and `x-public: true`).
+- Reuse the shared components: `Error`, `Money`, `Quantity`, and the `Limit` and `Cursor` parameters. Do not redefine money or quantity types per endpoint.
+- `/healthz` is an operational probe used by Docker healthchecks and lives outside this contract; `/api/v1/health` is the in-contract liveness endpoint.
 - Operations that create a transaction document accept `clientRequestId` (idempotency).
 - Errors use a single shape (`Error`: `code` UPPER_SNAKE, `message` for developers in English, `details`). Error codes are listed in `docs/modules/<module>.md`. User-facing Indonesian text is produced by the frontend from `code`.
 - Paged lists use the same `limit` and `cursor` on every resource.

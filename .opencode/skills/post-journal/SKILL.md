@@ -5,7 +5,7 @@ description: Create an automatic journal entry from another module's transaction
 
 # post-journal
 
-Journals are created by calling the `finance` module's public interface **inside the caller's transaction**. Other modules never write to `finance` tables.
+Journals are created by calling the `finance` module's public interface **inside the caller's transaction**. Posting through `PostJournal` is the convention, because only it checks that the journal balances. Direct writes to `finance_*` tables are technically allowed (ADR-0001) but skip that check, so avoid them.
 
 ## Step 0: show the journal on paper first
 
