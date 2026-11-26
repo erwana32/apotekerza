@@ -1,4 +1,3 @@
-// Package db owns the pgx connection pool and the transaction helper.
 package db
 
 import (

@@ -1,3 +1,9 @@
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -13,6 +19,7 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    logging: *logging
 
   migrate:
     build:
@@ -27,6 +34,7 @@ services:
       postgres:
         condition: service_healthy
     restart: "no"
+    logging: *logging
 
   backend:
     build:
@@ -48,6 +56,7 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    logging: *logging
 
   caddy:
     build:
@@ -64,6 +73,7 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+    logging: *logging
 
 volumes:
   postgres_data:

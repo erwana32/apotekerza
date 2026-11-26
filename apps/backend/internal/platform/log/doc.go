@@ -1,2 +1,2 @@
-// Package log will configure structured JSON logging with slog.
+// Package log configures structured JSON logging with slog.
 package log

@@ -1,2 +1,2 @@
-// Package http will host the HTTP server, middleware, and graceful shutdown.
+// Package http hosts the HTTP server, middleware, and graceful shutdown.
 package http

@@ -8,7 +8,7 @@ import (
 // NewHealthHandler returns a minimal operational liveness probe for the
 // process and the container orchestrator. It returns 200 with a plain body and
 // runs no domain logic. It is NOT part of the OpenAPI contract: the versioned
-// GET /api/v1/health is added spec-first in Prompt 0.3.
+// GET /api/v1/health is a separate, spec-defined operation in handler_health.go.
 func NewHealthHandler() nethttp.Handler {
 	return nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
 		if r.Method != nethttp.MethodGet {

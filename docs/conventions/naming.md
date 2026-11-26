@@ -40,6 +40,7 @@ Files are `snake_case.go`, **prefixed by role**, then the entity or use case.
 - Schemas PascalCase (`Product`, `CreateProductRequest`, `ProductList`). JSON properties `camelCase`.
 - Error codes: `UPPER_SNAKE` (`INSUFFICIENT_STOCK`).
 - Permission extension on every operation: `x-permission: <module>.<resource>.<action>`.
+- Exception: `GET /api/v1/health` is a cross-cutting infrastructure operation with `x-permission: platform.health.read` and `x-public: true`. `platform` is not a business module; `x-public` marks it for unauthenticated access when the auth middleware is implemented.
 
 ## 4. Frontend (React): `apps/web/src/features/<module>/<resource>/`
 
@@ -59,7 +60,7 @@ Files are `snake_case.go`, **prefixed by role**, then the entity or use case.
 
 ## 5. Permissions
 
-`<module>.<resource>.<action>`, e.g. `inventory.product.read`, `pos.sale.void`. Sensitive data has its own permission (`inventory.cost.read`, `pharmacy.patient.read`).
+`<module>.<resource>.<action>`, e.g. `inventory.product.read`, `pos.sale.void`. Sensitive data has its own permission (`inventory.cost.read`, `pharmacy.patient.read`). The cross-cutting `platform.health.read` is the documented exception (see §3).
 
 ## 6. Documents and commits
 

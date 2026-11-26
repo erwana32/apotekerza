@@ -1,2 +1,2 @@
-// Package db will own the pgx connection pool and the WithTx transaction helper.
+// Package db owns the pgx connection pool and the WithTx transaction helper.
 package db
