@@ -23,6 +23,125 @@ linters:
           deny:
             - pkg: github.com/erwana32/apotekerza/internal/
               desc: "platform must not import business modules (docs/architecture.md)"
+        # Layering inside a module: httpapi -> app -> domain and app -> store
+        # (docs/architecture.md, apps/backend/AGENTS.md). depguard matches package
+        # paths by prefix and does not expand globs, so every module is listed
+        # explicitly. Importing another module's inner layers is forbidden by the
+        # per-module rules below.
+        layer-domain:
+          files: ["**/internal/*/domain/**"]
+          list-mode: lax
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/identity/app
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/identity/httpapi
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/identity/store
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/masterdata/app
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/masterdata/httpapi
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/masterdata/store
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/inventory/app
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/inventory/httpapi
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/inventory/store
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/finance/app
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/finance/httpapi
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/finance/store
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/purchase/app
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/purchase/httpapi
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/purchase/store
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pos/app
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pos/httpapi
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pos/store
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pharmacy/app
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pharmacy/httpapi
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pharmacy/store
+              desc: "domain must not import app, httpapi, or store (docs/architecture.md)"
+        layer-store:
+          files: ["**/internal/*/store/**"]
+          list-mode: lax
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/identity/app
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/identity/httpapi
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/masterdata/app
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/masterdata/httpapi
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/inventory/app
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/inventory/httpapi
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/finance/app
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/finance/httpapi
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/purchase/app
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/purchase/httpapi
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pos/app
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pos/httpapi
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pharmacy/app
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pharmacy/httpapi
+              desc: "store must not import app or httpapi (docs/architecture.md)"
+        layer-app:
+          files: ["**/internal/*/app/**"]
+          list-mode: lax
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/identity/httpapi
+              desc: "app must not import httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/masterdata/httpapi
+              desc: "app must not import httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/inventory/httpapi
+              desc: "app must not import httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/finance/httpapi
+              desc: "app must not import httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/purchase/httpapi
+              desc: "app must not import httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pos/httpapi
+              desc: "app must not import httpapi (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pharmacy/httpapi
+              desc: "app must not import httpapi (docs/architecture.md)"
+        layer-httpapi:
+          files: ["**/internal/*/httpapi/**"]
+          list-mode: lax
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/identity/store
+              desc: "httpapi must go through app, not store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/masterdata/store
+              desc: "httpapi must go through app, not store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/inventory/store
+              desc: "httpapi must go through app, not store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/finance/store
+              desc: "httpapi must go through app, not store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/purchase/store
+              desc: "httpapi must go through app, not store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pos/store
+              desc: "httpapi must go through app, not store (docs/architecture.md)"
+            - pkg: github.com/erwana32/apotekerza/internal/pharmacy/store
+              desc: "httpapi must go through app, not store (docs/architecture.md)"
         identity:
           files: ["**/internal/identity/**"]
           list-mode: lax

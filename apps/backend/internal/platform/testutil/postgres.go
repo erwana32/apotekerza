@@ -11,7 +11,8 @@ import (
 
 // StartPostgres starts a real PostgreSQL container and returns a pool plus a
 // cleanup function. It is used by integration tests only: never a mocked DB.
-func StartPostgres(ctx context.Context) (*pgxpool.Pool, func(), error) {
+// Callers run MigrateUp with the returned DSN before querying.
+func StartPostgres(ctx context.Context) (*pgxpool.Pool, string, func(), error) {
 	container, err := postgres.Run(ctx,
 		"postgres:17-alpine",
 		postgres.WithDatabase("apotekerza"),
@@ -20,29 +21,29 @@ func StartPostgres(ctx context.Context) (*pgxpool.Pool, func(), error) {
 		postgres.BasicWaitStrategies(),
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("testutil: start postgres: %w", err)
+		return nil, "", nil, fmt.Errorf("testutil: start postgres: %w", err)
 	}
 
 	dsn, err := container.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
 		_ = container.Terminate(ctx)
-		return nil, nil, fmt.Errorf("testutil: connection string: %w", err)
+		return nil, "", nil, fmt.Errorf("testutil: connection string: %w", err)
 	}
 
 	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		_ = container.Terminate(ctx)
-		return nil, nil, fmt.Errorf("testutil: create pool: %w", err)
+		return nil, "", nil, fmt.Errorf("testutil: create pool: %w", err)
 	}
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		_ = container.Terminate(ctx)
-		return nil, nil, fmt.Errorf("testutil: ping postgres: %w", err)
+		return nil, "", nil, fmt.Errorf("testutil: ping postgres: %w", err)
 	}
 
 	cleanup := func() {
 		pool.Close()
 		_ = container.Terminate(ctx)
 	}
-	return pool, cleanup, nil
+	return pool, dsn, cleanup, nil
 }

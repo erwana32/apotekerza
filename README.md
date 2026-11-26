@@ -6,7 +6,7 @@ A staged ERP for an Indonesian pharmacy (apotek). Version 1 serves one pharmacy:
 
 ## Prerequisites
 
-- Go 1.25+
+- Go 1.26+
 - Node.js and pnpm (`corepack enable`)
 - Docker (PostgreSQL and integration tests)
 - GNU Make

@@ -27,7 +27,7 @@ Files are `snake_case.go`, **prefixed by role**, then the entity or use case.
 
 - One schema (`public`). Every table is named `<module>_<plural_name>` so the owner is visible: `inventory_stock_batches`, `finance_journal_entries`, `masterdata_products` (ADR-0001).
 - Tables: module prefix + plural `snake_case`. Columns: `snake_case`.
-- Primary key `id` (UUIDv7). Foreign key `<entity>_id`. Always `store_id` and `company_id` on business tables.
+- Primary key `id` (UUIDv7). Foreign key `<entity>_id`. Scope column is `company_id` only (ADR-0001): required on documents and their lines, operational data, users, and the audit log; **not** on access groups, link tables, session tokens, or (version 1) products and contacts. There is no `store_id` or `branch_id`.
 - Timestamps: `created_at`, `updated_at` (`timestamptz`). Client-origin time: `client_created_at`.
 - Money: `*_amount` (`numeric(18,2)`). Quantities: `quantity` or `*_quantity` (`numeric(18,4)`).
 - Optional read-only views for reports: `v_<module>_<name>` (e.g. `v_inventory_product_stock`). Not a required contract.

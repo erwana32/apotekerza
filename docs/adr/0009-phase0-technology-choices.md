@@ -5,7 +5,7 @@
 
 ## Context
 
-Phase 0 built an empty but fully wired skeleton in which `make check` passes and the Docker Compose stack runs locally. Before any code was written, the developer had to choose the HTTP router, logger, decimal library, JavaScript test and lint tools, and Go module path. Go 1.25 was pinned from the start. ADR-0002 and ADR-0003 already decide the API generators and the database stack, so this ADR records only the remaining choices. Every tool added later (oapi-codegen, testcontainers, golangci-lint) was pinned to a version compatible with Go 1.25.
+Phase 0 built an empty but fully wired skeleton in which `make check` passes and the Docker Compose stack runs locally. Before any code was written, the developer had to choose the HTTP router, logger, decimal library, JavaScript test and lint tools, and Go module path. Go was pinned from the start (1.25 at first, 1.26 since Phase 1.2). ADR-0002 and ADR-0003 already decide the API generators and the database stack, so this ADR records only the remaining choices. Every tool added later (oapi-codegen, testcontainers, golangci-lint) was pinned to a version compatible with the pinned Go version.
 
 ## Decision
 
@@ -28,3 +28,7 @@ It becomes harder to use router conveniences such as a mature middleware ecosyst
 - `cockroachdb/apd`: more precise control over decimal context, but a verbose API; `ericlagergren/decimal`: fast, but a smaller ecosystem than shopspring.
 - Jest: needs extra configuration with Vite and ESM; Cypress: heavier than Playwright for the critical paths named in `apps/web/AGENTS.md`.
 - A vanity-domain Go module path: needs hosting and a redirect with no benefit now; `example.com/...`: states the wrong owner.
+
+## Change log
+
+- 2026-11-26: Go bumped from 1.25 to 1.26 in `go.mod` when `sqlc` was added as a `go tool` dependency (Phase 1.2). `deploy/Dockerfile.backend` now builds with `golang:1.26-alpine`: the official image sets `GOTOOLCHAIN=local`, so a `golang:1.25` image cannot build a module that requires Go 1.26.

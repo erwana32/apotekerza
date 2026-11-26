@@ -4,7 +4,7 @@ This document describes the shape of apotekerza, the boundaries between modules,
 
 ## 1. Goal and version 1 scope
 
-A staged ERP for an Indonesian pharmacy (apotek). Version 1 serves **one pharmacy** (one `store`) per installation: Finance, Inventory, Purchasing, POS, and the pharmacy service (prescriptions). The schema already carries `store_id` and `company_id` so that multiple pharmacies and multiple companies can be added later without a large migration.
+A staged ERP for an Indonesian pharmacy (apotek). Version 1 serves **one pharmacy** (one `company`) per installation: Finance, Inventory, Purchasing, POS, and the pharmacy service (prescriptions). Scope follows Odoo: a single `company_id` column, where a pharmacy is a company, a branch (cabang) is a child company (`parent_id`), and a legal entity that owns several pharmacies is their parent company. Multiple pharmacies are added later as more company rows, without a new scope column.
 
 **Working model: similar to Odoo** (developer's goal, 2026-11-26). The module set, the single schema with module-prefixed tables (ADR-0001), access groups, double-entry accounting, per-batch stock with FEFO, cashier sessions, and purchase → receipt → payable all follow how Odoo works. Documents follow one lifecycle (`draft → confirmed/posted → cancelled`, cancel = reversal, server-assigned sequence numbers), every resource has a list view and a form view, and each document shows its history (ADR-0010). Modules are not installable: all are always in the binary. Odoo behaviours beyond these are decided per phase in the PRDs; until then, do not assume them.
 
@@ -26,7 +26,7 @@ Browser (React SPA) --HTTPS--> Caddy --/api/*--> backend (Go, one binary) --> Po
 | Module | Responsibility | Depends on | Status |
 |---|---|---|---|
 | `identity` | Users, sessions, access groups, permissions, audit trail | none | Planned |
-| `masterdata` | Contacts (suppliers/customers; patients live in `pharmacy`), products, tiered units, tax, `store`. Shared kernel | `identity` | Planned |
+| `masterdata` | Contacts (suppliers/customers; patients live in `pharmacy`), products, tiered units, tax, `company` (the pharmacy, with branches as child companies). Shared kernel | `identity` | Planned |
 | `inventory` | Batches and expiry, stock movements, FEFO, batch cost, min/max stock, stock take | `masterdata`, `finance` | Planned |
 | `finance` | Chart of accounts, double-entry journals, general ledger, accounts payable, cash/bank, financial reports | `masterdata` | Planned |
 | `purchase` | Defecta, cart, purchase plans (draft), purchase orders (SP, per type), goods receipt, supplier invoices, returns, payments | `masterdata`, `inventory`, `finance` | Planned |
@@ -55,6 +55,7 @@ Synchronous, in **one database transaction**. Example: a POS sale reduces stock 
 - **Tiered units** (box → strip → tablet): stock is stored in the smallest unit.
 - **Sale balance identity** is a property test (see `docs/modules/pos.md`).
 - **IDs** are UUIDv7. Time is `timestamptz` UTC.
+- **Scope** is `company_id` only. It is on documents and their lines, operational data (stock, POS, purchasing, journals), users, and the audit log. It is **not** on access groups (global, as in Odoo), link tables, session tokens, or, in version 1, products and contacts (shared by the whole installation; an optional `company_id` is added later where a record must belong to one company, null meaning shared). A stock warehouse or location dimension is added only if one pharmacy needs several warehouses; racks stay informational.
 
 ## 5. POS: online-first, open to offline
 
@@ -81,7 +82,7 @@ Stock/Inventory report (stock card per product and per batch), **Product List** 
 
 ## 9. Deferred from version 1
 
-Customer receivables and credit limits, membership/points, tiered pricing, bundles, WhatsApp sending, consignment, SATUSEHAT/BPJS, multi-pharmacy (a `store` picker in the UI), SP approval (the design keeps the SP type and a hook for it), racks as stock locations, offline POS, narcotics/psychotropics export (the data is still recorded), currencies other than IDR, e-Faktur.
+Customer receivables and credit limits, membership/points, tiered pricing, bundles, WhatsApp sending, consignment, SATUSEHAT/BPJS, multi-pharmacy (a company picker in the UI, branches as child companies, consolidated reports over the company tree), SP approval (the design keeps the SP type and a hook for it), racks as stock locations, offline POS, narcotics/psychotropics export (the data is still recorded), currencies other than IDR, e-Faktur.
 
 ## 10. Operations
 

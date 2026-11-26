@@ -16,7 +16,7 @@ Do not write code yet. Follow teaching mode in `AGENTS.md`. Show a worked exampl
 1. Read `docs/modules/finance.md` and ADR-0004.
 2. In the caller's `service_*.go`, after the document and stock movements are saved and within the same transaction, call `finance.PostJournal` with:
    - a source reference (document type + ID),
-   - `store_id` and `company_id`,
+   - `company_id`,
    - lines with account, debit or credit `*_amount`, and a description.
 3. The journal must balance (debit = credit). `finance` rejects an unbalanced journal with `JOURNAL_UNBALANCED`; do not work around it.
 4. Never `UPDATE` or `DELETE` a journal. To correct or void, call `finance.ReverseJournal` for the original, then post the correct one.

@@ -5,25 +5,25 @@ package db
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/erwana32/apotekerza/internal/platform/testutil"
 	"github.com/jackc/pgx/v5"
 )
 
+// TestMain stops the package's shared PostgreSQL container after the tests.
+func TestMain(m *testing.M) { os.Exit(testutil.RunMain(m)) }
+
 func TestWithTx_CommitsAndRollsBack(t *testing.T) {
 	ctx := context.Background()
-	pool, cleanup, err := testutil.StartPostgres(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer cleanup()
+	pool := testutil.NewDatabase(t)
 
 	if _, err := pool.Exec(ctx, "CREATE TABLE tx_probe (id text PRIMARY KEY)"); err != nil {
 		t.Fatal(err)
 	}
 
-	err = WithTx(ctx, pool, func(ctx context.Context, tx pgx.Tx) error {
+	err := WithTx(ctx, pool, func(ctx context.Context, tx pgx.Tx) error {
 		_, err := tx.Exec(ctx, "INSERT INTO tx_probe (id) VALUES ($1)", "committed")
 		return err
 	})
