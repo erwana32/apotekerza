@@ -15,6 +15,14 @@ linters:
   settings:
     depguard:
       rules:
+        platform:
+          files: ["**/internal/platform/**"]
+          list-mode: lax
+          allow:
+            - github.com/erwana32/apotekerza/internal/platform
+          deny:
+            - pkg: github.com/erwana32/apotekerza/internal/
+              desc: "platform must not import business modules (docs/architecture.md)"
         identity:
           files: ["**/internal/identity/**"]
           list-mode: lax
