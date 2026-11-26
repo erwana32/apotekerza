@@ -17,6 +17,7 @@ Browser (React SPA) --HTTPS--> Caddy --/api/*--> backend (Go, one binary) --> Po
 - **Spec-first API contract:** `api/openapi.yaml` generates the Go server and the TypeScript client. ADR-0002.
 - **Data access:** `pgx` + `sqlc`, SQL migrations with `goose`, no ORM. ADR-0003.
 - **Deployment:** one VPS, Docker Compose (`caddy`, `backend`, `postgres`). Caddy handles TLS, reverse proxy, and static files.
+- **Phase 0 tooling:** stdlib `net/http`, `slog`, `shopspring/decimal`, ESLint + TypeScript strict + Vitest + Playwright, module path `github.com/erwana32/apotekerza`. ADR-0010.
 
 ## 3. Modules and dependencies
 
