@@ -47,3 +47,22 @@ func (q *Queries) InsertUserGroup(ctx context.Context, params gen.InsertUserGrou
 	}
 	return nil
 }
+
+// LockBuiltinAccessGroups locks the builtin group rows until the transaction
+// ends, so the last-Administrator check cannot race with another update.
+func (q *Queries) LockBuiltinAccessGroups(ctx context.Context) error {
+	if err := q.Queries.LockBuiltinAccessGroups(ctx); err != nil {
+		return fmt.Errorf("store: lock builtin access groups: %w", err)
+	}
+	return nil
+}
+
+// CountActiveBuiltinMembers returns how many active users hold an active
+// builtin group.
+func (q *Queries) CountActiveBuiltinMembers(ctx context.Context) (int64, error) {
+	count, err := q.Queries.CountActiveBuiltinMembers(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("store: count active builtin members: %w", err)
+	}
+	return count, nil
+}

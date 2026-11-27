@@ -111,6 +111,11 @@ var ErrUserInactive = newError("USER_INACTIVE", http.StatusForbidden, "user is i
 // deactivate, or strip permissions from the builtin Administrator group.
 var ErrBuiltinGroupImmutable = newError("BUILTIN_GROUP_IMMUTABLE", http.StatusConflict, "the builtin Administrator group cannot be changed", nil)
 
+// ErrLastAdministrator is returned when an update would leave the installation
+// without an active user in the Administrator group, which nobody could repair
+// through the UI.
+var ErrLastAdministrator = newError("LAST_ADMINISTRATOR", http.StatusConflict, "at least one active Administrator must remain", nil)
+
 // ErrUnknownPermission is returned when a request grants a permission that is
 // not in the registry (api/openapi.yaml).
 var ErrUnknownPermission = newError("UNKNOWN_PERMISSION", http.StatusUnprocessableEntity, "permission is not in the registry", nil)

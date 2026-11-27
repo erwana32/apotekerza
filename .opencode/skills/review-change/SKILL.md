@@ -36,6 +36,7 @@ Read-only. Use `git diff`, `git log`, `git show`. Do not edit files.
 **API and generated code**
 - Spec changed first? `operationId` unique and `VerbNoun`? `x-permission` set?
 - Any hand edit of generated code or an existing migration?
+- Database naming (`docs/conventions/naming.md`, section 2): table `<module>_<plural>`, explicit constraint/index/trigger names starting with the table (`_key`, `_idx`), booleans `is_`/`has_`, status as `text` + `CHECK` (no `ENUM`), no new schema, no `search_path`. Does a Go constant that matches a constraint name still match the migration?
 - Handler thin; logic in the service?
 
 **Security and data**

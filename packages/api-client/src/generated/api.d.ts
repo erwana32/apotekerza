@@ -115,7 +115,7 @@ export interface paths {
         head?: never;
         /**
          * Update a user
-         * @description Changes the display name and active flag. A user is deactivated, never deleted.
+         * @description Changes the display name, the active flag, and optionally the group membership. A user is deactivated, never deleted. An update that would leave no active Administrator is refused with LAST_ADMINISTRATOR.
          */
         patch: operations["UpdateUser"];
         trace?: never;

@@ -32,6 +32,9 @@ Start from what `docs/modules/<module>.md` already says about the entity. Wait f
    - Ledger and stock tables are append-only: do not add update/delete paths. Corrections are reversing rows.
    - Views are optional, for reports only, named `v_<module>_<name>`. Other modules may read tables directly.
    - Add indexes for the queries you write and for every foreign key you filter on.
+   - Name every constraint, index, trigger, and function explicitly, starting with the table name: unique `<table>_<columns>_key`, index `<table>_<columns>_idx`, check `<table>_<column>_<rule>`, trigger and function `<table>_<behaviour>`. Primary and foreign keys keep PostgreSQL's default names. Go code may match these names to map database errors, so never rely on generated names (`docs/conventions/naming.md`, section 2).
+   - Booleans are `is_`/`has_` and `NOT NULL` with a default. Closed value sets (status) are `text` plus a `CHECK`, never a PostgreSQL `ENUM`.
+   - Do not create a schema and do not use `search_path`.
 4. Write or update the sqlc queries in `store/queries/query_<entity>.sql` (`GetXByID`, `ListXs`, `InsertX`, `UpdateX`). Run `make gen`.
 5. Add an integration test that exercises the new schema against a real PostgreSQL.
 6. Update `docs/modules/<module>.md` if behaviour or invariants changed.

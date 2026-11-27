@@ -1,8 +1,18 @@
-.PHONY: help gen gen-check lint test test-integration test-e2e check-naming check dev-up dev-down
+.PHONY: help gen gen-check lint test test-integration test-e2e check-naming check dev-up dev-down dc stg-up stg-down prod-up prod-down
 
 BACKEND_DIR := apps/backend
 WEB_DIR := apps/web
 COMPOSE := deploy/docker-compose.yml
+COMPOSE_PROD := deploy/docker-compose.prod.yml
+STG_ENV := deploy/.env.stg
+PROD_ENV := deploy/.env
+
+# docker compose per environment: its project name (separate containers and database
+# volume), env file, and compose files. `make dc` and the stg-/prod- targets share these.
+DC_dev  := docker compose -f $(COMPOSE)
+DC_stg  := docker compose -p apotekerza-stg --env-file $(STG_ENV) -f $(COMPOSE)
+DC_prod := docker compose -p apotekerza-prod --env-file $(PROD_ENV) -f $(COMPOSE) -f $(COMPOSE_PROD)
+ENV ?= dev
 
 help: ## List commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -39,3 +49,24 @@ dev-up: ## Start the local dev environment
 
 dev-down: ## Stop the local dev environment (data volumes are kept)
 	@docker compose -f $(COMPOSE) down
+
+dc: ## docker compose for any environment: make dc [ENV=dev|stg|prod] CMD="logs -f backend"
+	$(if $(strip $(CMD)),,$(error Usage: make dc [ENV=dev|stg|prod] CMD="ps"   e.g. CMD="logs -f backend"))
+	$(if $(DC_$(ENV)),,$(error Unknown ENV '$(ENV)': use dev, stg, or prod))
+	$(if $(filter stg,$(ENV)),@test -f $(STG_ENV) || { echo "Missing $(STG_ENV): copy deploy/.env.stg.example and fill it in."; exit 1; })
+	$(if $(filter prod,$(ENV)),@test -f $(PROD_ENV) || { echo "Missing $(PROD_ENV): copy deploy/.env.prod.example and fill it in."; exit 1; })
+	@$(DC_$(ENV)) $(CMD)
+
+# Each environment has its own Compose project name, so its containers and its database
+# volume are separate (a shared project name would share the Postgres volume).
+stg-up: ## Start staging on this machine (needs deploy/.env.stg)
+	@$(MAKE) --no-print-directory dc ENV=stg CMD="up -d --build"
+
+stg-down: ## Stop staging (data volume is kept)
+	@$(MAKE) --no-print-directory dc ENV=stg CMD="down"
+
+prod-up: ## Start production, on the server only (needs deploy/.env)
+	@$(MAKE) --no-print-directory dc ENV=prod CMD="up -d --build"
+
+prod-down: ## Stop production (data volume is kept)
+	@$(MAKE) --no-print-directory dc ENV=prod CMD="down"
