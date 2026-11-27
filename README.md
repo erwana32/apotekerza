@@ -29,7 +29,7 @@ A staged ERP for an Indonesian pharmacy (apotek). Version 1 serves one pharmacy:
 | `packages/api-client` | Generated TypeScript client (never edited by hand) |
 | `deploy/` | Docker Compose (base + production override), `Caddyfile`, `Caddyfile.local`, Dockerfiles, `.env.example` |
 | `scripts/` | Checker scripts |
-| `source/` | Brand source files: company logo (`logo.svg`, `logo-mark.png`), see `docs/branding.md`. Also `source/start-setup.md`: phased copy-paste prompts for building the app step by step |
+| `source/` | Brand source files: company logo (`logo.svg`, `logo-mark.png`), see `docs/branding.md`. Also `source/start-setup.md` (phased copy-paste prompts for building the app step by step) and `source/learn.md` (a hands-on tour: install, run, test, Docker, call the API) |
 
 ## Language
 

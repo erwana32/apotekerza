@@ -29,7 +29,7 @@ Stack: Go, PostgreSQL, React (TypeScript) + Tailwind, OpenAPI, Docker Compose, C
 | `docs/` | Architecture, modules, ADRs, conventions, glossary | `docs/README.md` |
 | `.opencode/skills/` | Skills for repeatable procedures (`<name>/SKILL.md`) | table below |
 | `scripts/` | Checker scripts (`check-naming.sh`) | |
-| `source/` | `logo.svg` and `logo-mark.png`: **the only source of the company logo, never edited**. Also `start-setup.md`, the phased build guide | `docs/branding.md` |
+| `source/` | `logo.svg` and `logo-mark.png`: **the only source of the company logo, never edited**. Also `start-setup.md` (the phased build guide) and `learn.md` (the hands-on learning guide for people) | `docs/branding.md` |
 
 ## Commands
 
