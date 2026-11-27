@@ -2,7 +2,7 @@
 
 Users, sessions, access groups, permissions, and the audit trail.
 
-- **Status:** In progress (Phase 1.2, backend)
+- **Status:** Backend done (Phase 1.2); web screens come in Phase 1.3
 - **Depends on:** none
 - **Table prefix:** `identity_` (one schema, ADR-0001)
 
@@ -51,6 +51,19 @@ The audit log carries `company_id` (the company whose record the event concerns)
   CREATEADMIN_PASSWORD='...' go run ./cmd/createadmin -company <company-uuid> -username admin
   ```
 
+  In the Docker stack the same binary is in the backend image (`Dockerfile.backend`), and `DATABASE_URL` is already set in that container:
+
+  ```sh
+  # production, on the server
+  docker compose -p apotekerza-prod --env-file deploy/.env \
+    -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml \
+    exec -e CREATEADMIN_PASSWORD='...' backend /app/createadmin -company <company-uuid> -username admin
+
+  # staging, on a laptop
+  docker compose -p apotekerza-stg --env-file deploy/.env.stg -f deploy/docker-compose.yml \
+    exec -e CREATEADMIN_PASSWORD='...' backend /app/createadmin -company <company-uuid> -username admin
+  ```
+
   It joins the builtin `Administrator` group, which already holds every permission from migration `20261127100000_identity_seed_endpoint_permissions.sql`.
 
 ## Endpoints
@@ -72,6 +85,10 @@ Every operation declares `x-permission` in `api/openapi.yaml`; `Login` and the h
 | `ListAuditEvents` | `GET /api/v1/identity/audit-events` | `identity.audit.read` |
 
 List endpoints are keyset-paginated: the response carries an opaque base64url `nextCursor` and the request takes `limit` plus `cursor` (see `api/AGENTS.md`). Users and groups are ordered and paged by `username`/`name`; audit events by `id DESC`, because timestamps can tie inside one transaction and UUIDv7 ids are time-ordered.
+
+**The last Administrator is protected.** An `UpdateUser` that would leave no *active* user in an *active* builtin group (deactivating the only Administrator, or removing the group from them) is refused with `LAST_ADMINISTRATOR` and rolled back, because nobody could repair the installation through the UI. The check locks the builtin group rows for the transaction, so two concurrent updates cannot each remove a different Administrator. When no Administrator exists yet (before `createadmin` has run) there is nothing to protect and updates are not blocked.
+
+**Login timing.** An unknown username runs the same argon2id work as a known one (`domain.BurnPasswordCheck` against a throwaway hash made with the current parameters), so response time does not reveal which usernames exist. Together with the single `INVALID_CREDENTIALS` code, the endpoint does not enumerate users. `CurrentSession` separates an unknown, revoked, or expired token (`SESSION_EXPIRED`, 401) from an infrastructure failure (`INTERNAL_ERROR`, 500), so a database outage is not shown to every user as "logged out".
 
 A user is **deactivated**, never deleted. Deactivating a user also revokes every live session, so an old cookie stops working immediately. The built-in `Administrator` group cannot be renamed, deactivated, or stripped of permissions (`BUILTIN_GROUP_IMMUTABLE`): renaming it silently would weaken the only account that can repair the installation.
 
@@ -103,9 +120,20 @@ A user is **deactivated**, never deleted. Deactivating a user also revokes every
 | `USERNAME_TAKEN` | 409 | The username already exists (unique across the installation). |
 | `ACCESS_GROUP_NAME_TAKEN` | 409 | The access group name already exists. |
 | `BUILTIN_GROUP_IMMUTABLE` | 409 | An attempt to weaken the builtin Administrator group. |
+| `LAST_ADMINISTRATOR` | 409 | An update would leave no active Administrator. |
 | `UNKNOWN_PERMISSION` | 422 | A granted permission is not in the registry. |
 | `VALIDATION_FAILED` | 422 | A field rule failed; `details` names the field. |
 
 ## Deferred
 
 Per-company role assignment (a user's allowed companies), external identity providers, two-factor authentication.
+
+## Known limitations (decided, not yet built)
+
+Recorded after the Phase 1.2 review so they are decisions, not surprises:
+
+- **No login rate limit or lockout.** Brute force is limited only by argon2id cost. Add throttling (per username and per address) in the hardening phase, or earlier if the installation is exposed to the internet.
+- **Cookie `Secure` is always on.** Chrome accepts it on `http://localhost`, Safari does not; develop in Chrome (the local Caddy serves plain `http://localhost`). A config switch is added only if it becomes a real problem.
+- **Read endpoints are not filtered by `company_id` yet.** `ListUsers`, `GetUser`, and `ListAuditEvents` return the whole installation, which is correct while there is one company. Add the `company_id` filter when the multi-company UI is built (hard rule 13).
+- **The use-case layer reads the OpenAPI spec through `platform/http/gen`** to build the permission registry. Allowed by the lint rules (`platform` is shared), but if it becomes awkward, move spec reading into `platform` and pass the registry in.
+- **Session expiry uses two clocks.** `expires_at` is computed from the injected clock, but the live-session filter uses the database's `now()`. Tests that fake the clock cannot expire a session; set `expires_at` directly in SQL for those tests.

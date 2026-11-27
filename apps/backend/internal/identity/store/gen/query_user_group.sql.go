@@ -11,6 +11,22 @@ import (
 	"github.com/google/uuid"
 )
 
+const countActiveBuiltinMembers = `-- name: CountActiveBuiltinMembers :one
+SELECT count(DISTINCT u.id)::bigint
+FROM identity_users u
+JOIN identity_user_groups ug ON ug.user_id = u.id
+JOIN identity_access_groups g ON g.id = ug.access_group_id
+WHERE u.is_active AND g.is_builtin AND g.is_active
+`
+
+// Active users that hold an active builtin group (Administrator).
+func (q *Queries) CountActiveBuiltinMembers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countActiveBuiltinMembers)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const deleteUserGroups = `-- name: DeleteUserGroups :exec
 DELETE FROM identity_user_groups
 WHERE user_id = $1
@@ -96,4 +112,15 @@ func (q *Queries) ListGroupIDsForUsers(ctx context.Context, dollar_1 []uuid.UUID
 		return nil, err
 	}
 	return items, nil
+}
+
+const lockBuiltinAccessGroups = `-- name: LockBuiltinAccessGroups :exec
+SELECT id FROM identity_access_groups WHERE is_builtin FOR UPDATE
+`
+
+// Serialises changes that could remove the last Administrator: two concurrent
+// transactions each deactivating a different admin would both see "one left".
+func (q *Queries) LockBuiltinAccessGroups(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, lockBuiltinAccessGroups)
+	return err
 }

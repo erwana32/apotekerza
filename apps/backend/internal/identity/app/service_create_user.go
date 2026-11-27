@@ -217,6 +217,15 @@ func (s *Service) UpdateUser(ctx context.Context, actor *SessionContext, in Upda
 	err := db.WithTx(ctx, s.pool, func(ctx context.Context, tx pgx.Tx) error {
 		queries := store.New(tx)
 
+		// Lock first, so two concurrent updates cannot both remove an Administrator.
+		if err := queries.LockBuiltinAccessGroups(ctx); err != nil {
+			return err
+		}
+		administratorsBefore, err := queries.CountActiveBuiltinMembers(ctx)
+		if err != nil {
+			return err
+		}
+
 		before, err := queries.GetUserByID(ctx, in.ID)
 		if errors.Is(err, store.ErrUserNotFound) {
 			return domain.ErrUserNotFound
@@ -242,6 +251,19 @@ func (s *Service) UpdateUser(ctx context.Context, actor *SessionContext, in Upda
 		if before.IsActive && !in.IsActive {
 			if err := queries.RevokeSessionsForUser(ctx, in.ID); err != nil {
 				return err
+			}
+		}
+
+		// The update must not leave the installation without an active
+		// Administrator: nobody could repair it through the UI. When there were
+		// none before (no admin created yet), there is nothing to protect.
+		if administratorsBefore > 0 {
+			administratorsAfter, err := queries.CountActiveBuiltinMembers(ctx)
+			if err != nil {
+				return err
+			}
+			if administratorsAfter == 0 {
+				return domain.ErrLastAdministrator
 			}
 		}
 

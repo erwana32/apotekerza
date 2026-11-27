@@ -2,7 +2,7 @@
 
 A staged ERP for an Indonesian pharmacy (apotek). Version 1 serves one pharmacy: Finance, Inventory, Purchasing, POS, and the pharmacy service (prescriptions).
 
-**Status:** Phase 0 (repository bootstrap) is done: the Go backend skeleton, the React web skeleton, the OpenAPI contract with generated clients, Docker Compose with Caddy, and the quality gates are in place. No business module exists yet; Phase 1 (foundation) is in progress. Start with `AGENTS.md` and `docs/architecture.md`; build progress is tracked in `source/start-setup.md`.
+**Status:** Phase 0 (repository bootstrap) is done: the Go backend skeleton, the React web skeleton, the OpenAPI contract with generated clients, Docker Compose with Caddy, and the quality gates are in place. Phase 1 (foundation) is in progress: the shared platform packages and the identity backend (login, sessions, users, access groups, audit trail, permission guard) are done; the web screens and `masterdata` come next. No other business module exists yet. Start with `AGENTS.md` and `docs/architecture.md`; build progress is tracked in `source/start-setup.md`.
 
 ## Prerequisites
 

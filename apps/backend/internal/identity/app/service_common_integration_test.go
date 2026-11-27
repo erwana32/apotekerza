@@ -205,6 +205,101 @@ func TestUpdateAccessGroup_RefusesToWeakenBuiltinAdministrator(t *testing.T) {
 	}
 }
 
+// builtinAdministratorID returns the seeded Administrator group id.
+func builtinAdministratorID(t *testing.T, pool *pgxpool.Pool) uuid.UUID {
+	t.Helper()
+	var id uuid.UUID
+	if err := pool.QueryRow(context.Background(),
+		`SELECT id FROM identity_access_groups WHERE is_builtin`).Scan(&id); err != nil {
+		t.Fatalf("read Administrator: %v", err)
+	}
+	return id
+}
+
+func TestUpdateUser_RefusesToRemoveTheLastAdministrator(t *testing.T) {
+	ctx := context.Background()
+	service, pool := newService(t)
+	adminGroup := builtinAdministratorID(t, pool)
+	first := newUser(t, service, "admin.satu", []uuid.UUID{adminGroup})
+
+	// Deactivating the only Administrator is refused.
+	_, err := service.UpdateUser(ctx, nil, app.UpdateUserInput{
+		ID: first.ID, DisplayName: first.DisplayName, IsActive: false,
+	})
+	if !errors.Is(err, domain.ErrLastAdministrator) {
+		t.Fatalf("deactivate last admin = %v, want ErrLastAdministrator", err)
+	}
+
+	// So is removing the Administrator group from the only Administrator.
+	none := []uuid.UUID{}
+	_, err = service.UpdateUser(ctx, nil, app.UpdateUserInput{
+		ID: first.ID, DisplayName: first.DisplayName, IsActive: true, GroupIDs: &none,
+	})
+	if !errors.Is(err, domain.ErrLastAdministrator) {
+		t.Fatalf("remove group from last admin = %v, want ErrLastAdministrator", err)
+	}
+
+	// The refusal rolled back: the user is still active and still an admin.
+	after, err := service.GetUser(ctx, first.ID)
+	if err != nil || !after.IsActive || len(after.GroupIDs) != 1 {
+		t.Fatalf("user after refused updates = %+v, %v", after, err)
+	}
+
+	// With a second Administrator, the first can be deactivated.
+	newUser(t, service, "admin.dua", []uuid.UUID{adminGroup})
+	if _, err := service.UpdateUser(ctx, nil, app.UpdateUserInput{
+		ID: first.ID, DisplayName: first.DisplayName, IsActive: false,
+	}); err != nil {
+		t.Fatalf("deactivate one of two admins: %v", err)
+	}
+}
+
+func TestUpdateUser_AllowsEditingOthersWhileAnAdministratorExists(t *testing.T) {
+	ctx := context.Background()
+	service, pool := newService(t)
+	newUser(t, service, "admin.satu", []uuid.UUID{builtinAdministratorID(t, pool)})
+	kasir := newUser(t, service, "kasir.satu", nil)
+
+	if _, err := service.UpdateUser(ctx, nil, app.UpdateUserInput{
+		ID: kasir.ID, DisplayName: "Kasir Satu", IsActive: false,
+	}); err != nil {
+		t.Fatalf("deactivate a non-admin: %v", err)
+	}
+}
+
+func TestUpdateUser_WithoutAnyAdministratorIsNotBlocked(t *testing.T) {
+	ctx := context.Background()
+	service, _ := newService(t)
+	user := newUser(t, service, "baru.masuk", nil)
+
+	// No admin exists yet (createadmin not run), so there is nothing to protect.
+	if _, err := service.UpdateUser(ctx, nil, app.UpdateUserInput{
+		ID: user.ID, DisplayName: "Nama Baru", IsActive: true,
+	}); err != nil {
+		t.Fatalf("update with no administrators: %v", err)
+	}
+}
+
+func TestCurrentSession_ReportsDatabaseFailureAsInternalNotExpired(t *testing.T) {
+	ctx := context.Background()
+	service, pool := newService(t)
+	newUser(t, service, "operator.dua", nil)
+	login, err := service.Authenticate(ctx, "operator.dua", testPassword)
+	if err != nil {
+		t.Fatalf("authenticate: %v", err)
+	}
+
+	pool.Close() // simulate the database going away
+
+	_, err = service.CurrentSession(ctx, login.Token)
+	if errors.Is(err, domain.ErrSessionExpired) {
+		t.Fatal("a database failure must not look like an expired session (401)")
+	}
+	if !errors.Is(err, domain.ErrInternal) {
+		t.Fatalf("error = %v, want ErrInternal", err)
+	}
+}
+
 func TestAuditTrail_RecordsLoginLogoutAndUserChanges(t *testing.T) {
 	ctx := context.Background()
 	service, _ := newService(t)

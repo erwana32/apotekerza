@@ -42,6 +42,9 @@ func (s *Service) Authenticate(ctx context.Context, username, password string) (
 
 		user, err := queries.GetUserByUsername(ctx, username)
 		if errors.Is(err, store.ErrUserNotFound) {
+			// Do the same argon2id work as for a real user, so timing does not
+			// reveal which usernames exist.
+			domain.BurnPasswordCheck(password)
 			return domain.ErrInvalidCredentials
 		}
 		if err != nil {
@@ -134,11 +137,17 @@ func (s *Service) CurrentSession(ctx context.Context, token string) (SessionCont
 	}
 
 	session, err := store.New(s.pool).GetSessionByTokenHash(ctx, tokenHash)
-	if errors.Is(err, store.ErrSessionNotFound) || !session.UserIsActive {
+	if errors.Is(err, store.ErrSessionNotFound) {
 		return SessionContext{}, domain.ErrSessionExpired
 	}
+	// Any other error is an infrastructure failure: report it as such instead of
+	// treating the zero-value session as an inactive user (a 401 would log
+	// everyone out when the database is down).
 	if err != nil {
 		return SessionContext{}, asDomainError(err)
+	}
+	if !session.UserIsActive {
+		return SessionContext{}, domain.ErrSessionExpired
 	}
 
 	permissions, err := store.New(s.pool).ListPermissionsForUser(ctx, session.UserID)

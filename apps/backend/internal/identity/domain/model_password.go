@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -53,6 +54,22 @@ func VerifyPassword(encodedHash, password string) error {
 		return ErrPasswordMismatch
 	}
 	return nil
+}
+
+var (
+	dummyHashOnce sync.Once
+	dummyHash     string
+)
+
+// BurnPasswordCheck spends the same time as VerifyPassword, against a throwaway
+// hash made with the current parameters. Login calls it for an unknown username,
+// so the response time does not reveal which usernames exist. The result is
+// discarded.
+func BurnPasswordCheck(password string) {
+	dummyHashOnce.Do(func() {
+		dummyHash, _ = HashPassword("apotekerza-dummy-password")
+	})
+	_ = VerifyPassword(dummyHash, password)
 }
 
 type argonParams struct {

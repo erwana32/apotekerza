@@ -82,7 +82,7 @@ Bug: <what happens, what should happen>. First write a failing test that reprodu
 | Phase | Status |
 |---|---|
 | 0. Repository bootstrap (0.1–0.6) | Done. Merged on `main`. Technology choices are in ADR-0009 |
-| 1. Foundation | In progress. **1.1** shared building blocks: done (PR #2). **1.2** identity backend: data layer done and merged (PR #3: migrations, Administrator seed, sqlc queries with keyset pagination, repository wrappers, `testutil.NewDatabase`, layer lint rules, company-only scope per ADR-0001). Still to do in 1.2: `app/` and `httpapi/` layers, argon2id, cookie sessions, endpoints, `cmd/createadmin`. **1.3–1.5** not started |
+| 1. Foundation | In progress. **1.1** shared building blocks: done (PR #2). **1.2** identity backend: done (PR #3 data layer; PR #5 `app/` and `httpapi/` layers, argon2id, cookie sessions, 13 endpoints, permission guard from the spec, `cmd/createadmin`; hardening in `fix/identity-hardening`: createadmin in the image, last-Administrator protection, login timing, session error handling). Open decisions are in `docs/modules/identity.md` ("Known limitations"). **1.3–1.5** not started |
 | 2–8 | Not started |
 
 Update this table when a phase or prompt is finished. Current decisions live in `docs/adr/` (0001 modular monolith with one schema, Odoo style; 0004 append-only ledger; 0005 stock per batch and FEFO; 0008 OpenCode and rules; 0009 Phase 0 technology; 0010 Odoo-style documents, screens, history).

@@ -1,0 +1,28 @@
+# Build context for deploy/Dockerfile.backend and deploy/Dockerfile.web (context = repo root).
+# Keep it small and keep secrets out: anything not needed to build an image stays out.
+
+# Version control and tooling
+.git
+.github
+.opencode
+.claude
+
+# Secrets: real env files never enter a build context
+**/.env
+**/.env.*
+
+# Dependencies and build output are rebuilt inside the image, never copied from the host
+**/node_modules
+**/dist
+apps/backend/bin
+**/coverage
+**/playwright-report
+**/test-results
+
+# Not needed to build
+docs
+source
+**/*.md
+.DS_Store
+.idea
+.vscode

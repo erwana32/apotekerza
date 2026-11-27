@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -87,4 +88,25 @@ func harnessArgonHash(t *testing.T) string {
 		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(key),
 	)
+}
+
+func TestBurnPasswordCheck_CostsAboutAsMuchAsARealVerify(t *testing.T) {
+	hash, err := HashPassword("rahasia-ini-uji1")
+	if err != nil {
+		t.Fatalf("hash: %v", err)
+	}
+	BurnPasswordCheck("warm-up") // builds the dummy hash outside the timing
+
+	start := time.Now()
+	_ = VerifyPassword(hash, "salah")
+	verify := time.Since(start)
+
+	start = time.Now()
+	BurnPasswordCheck("salah")
+	burn := time.Since(start)
+
+	// An unknown username must not answer visibly faster than a known one.
+	if burn < verify/2 {
+		t.Fatalf("burn took %v but a real verify took %v: login timing would reveal usernames", burn, verify)
+	}
 }
