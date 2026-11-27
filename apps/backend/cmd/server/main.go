@@ -9,6 +9,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/erwana32/apotekerza/internal/identity"
+	"github.com/erwana32/apotekerza/internal/identity/app"
+	"github.com/erwana32/apotekerza/internal/platform/clock"
 	"github.com/erwana32/apotekerza/internal/platform/config"
 	platformdb "github.com/erwana32/apotekerza/internal/platform/db"
 	platformhttp "github.com/erwana32/apotekerza/internal/platform/http"
@@ -43,8 +46,12 @@ func run() error {
 	// Operational liveness probe, outside the OpenAPI contract.
 	mux.Handle("GET /healthz", platformhttp.NewHealthHandler())
 
-	// Versioned API routes come from the generated strict server.
-	strict := gen.NewStrictHandler(platformhttp.NewStrictHandler(), nil)
+	// Identity: permission registry from the spec, argon2id, cookie sessions.
+	identityModule := identity.New(app.NewService(pool, app.NewPermissionRegistry(), clock.System()))
+
+	// Versioned API routes come from the generated strict server, with the
+	// identity permission guard installed as a strict middleware.
+	strict := newStrictAPI(identityModule)
 	handler := gen.HandlerFromMux(strict, mux)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

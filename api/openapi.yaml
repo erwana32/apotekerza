@@ -25,6 +25,268 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /api/v1/identity/login:
+    post:
+      operationId: Login
+      summary: Sign in and start a session
+      description: Public. On success sets an HttpOnly session cookie and returns the current user.
+      x-permission: identity.session.write
+      x-public: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+        '401':
+          $ref: '#/components/responses/Error'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/identity/logout:
+    post:
+      operationId: Logout
+      summary: End the current session
+      description: Revokes the session cookie. Idempotent.
+      x-permission: identity.session.write
+      responses:
+        '204':
+          description: Signed out
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/identity/me:
+    get:
+      operationId: GetMe
+      summary: Read the signed-in user
+      x-permission: identity.user.read
+      responses:
+        '200':
+          description: The current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+        '401':
+          $ref: '#/components/responses/Error'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/identity/users:
+    get:
+      operationId: ListUsers
+      summary: List users
+      x-permission: identity.user.read
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: One page of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: CreateUser
+      summary: Create a user
+      x-permission: identity.user.write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/identity/users/{userId}:
+    get:
+      operationId: GetUser
+      summary: Read one user
+      x-permission: identity.user.read
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: The user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      operationId: UpdateUser
+      summary: Update a user
+      description: Changes the display name and active flag. A user is deactivated, never deleted.
+      x-permission: identity.user.write
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/identity/access-groups:
+    get:
+      operationId: ListAccessGroups
+      summary: List access groups
+      x-permission: identity.group.read
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: One page of access groups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessGroupList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: CreateAccessGroup
+      summary: Create an access group
+      x-permission: identity.group.write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccessGroupRequest'
+      responses:
+        '201':
+          description: Created access group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessGroup'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/identity/access-groups/{accessGroupId}:
+    get:
+      operationId: GetAccessGroup
+      summary: Read one access group
+      x-permission: identity.group.read
+      parameters:
+        - $ref: '#/components/parameters/AccessGroupId'
+      responses:
+        '200':
+          description: The access group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessGroup'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      operationId: UpdateAccessGroup
+      summary: Update an access group and its permissions
+      description: Replaces the permission set. The builtin Administrator group cannot be renamed or deactivated.
+      x-permission: identity.group.write
+      parameters:
+        - $ref: '#/components/parameters/AccessGroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccessGroupRequest'
+      responses:
+        '200':
+          description: Updated access group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessGroup'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/identity/permissions:
+    get:
+      operationId: ListPermissions
+      summary: List every permission the installation knows
+      description: The registry read from api/openapi.yaml (x-permission values).
+      x-permission: identity.group.read
+      responses:
+        '200':
+          description: The permission registry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionList'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/identity/audit-events:
+    get:
+      operationId: ListAuditEvents
+      summary: Read the audit trail
+      description: Append-only audit trail and the source of per-document history (ADR-0010).
+      x-permission: identity.audit.read
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: entity
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: entityId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: One page of audit events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventList'
+        default:
+          $ref: '#/components/responses/Error'
+
 components:
   parameters:
     Limit:
@@ -44,6 +306,21 @@ components:
       description: Opaque cursor returned by the previous page
       schema:
         type: string
+
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AccessGroupId:
+      name: accessGroupId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
 
   schemas:
     Error:
@@ -81,6 +358,212 @@ components:
         status:
           type: string
           enum: [ok]
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+          writeOnly: true
+
+    Me:
+      type: object
+      required: [user, permissions]
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        permissions:
+          type: array
+          items:
+            type: string
+
+    User:
+      type: object
+      required: [id, companyId, username, displayName, isActive, createdAt, updatedAt, groupIds]
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        displayName:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        groupIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UserList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        nextCursor:
+          type: string
+          description: Opaque cursor for the next page; absent on the last page
+
+    CreateUserRequest:
+      type: object
+      required: [username, displayName, password]
+      properties:
+        username:
+          type: string
+          description: Lowercase; unique across the installation
+          pattern: '^[a-z0-9._-]{3,64}$'
+        displayName:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 8
+          writeOnly: true
+        groupIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    UpdateUserRequest:
+      type: object
+      required: [displayName, isActive]
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+        isActive:
+          type: boolean
+        groupIds:
+          type: array
+          description: Replaces the user's group membership when present
+          items:
+            type: string
+            format: uuid
+
+    AccessGroup:
+      type: object
+      required: [id, name, isBuiltin, isActive, createdAt, updatedAt, permissions]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        isBuiltin:
+          type: boolean
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        permissions:
+          type: array
+          items:
+            type: string
+
+    AccessGroupList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessGroup'
+        nextCursor:
+          type: string
+
+    CreateAccessGroupRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        permissions:
+          type: array
+          items:
+            type: string
+
+    UpdateAccessGroupRequest:
+      type: object
+      required: [name, isActive]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        isActive:
+          type: boolean
+        permissions:
+          type: array
+          description: Replaces the group's permission set when present
+          items:
+            type: string
+
+    PermissionList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: string
+
+    AuditEvent:
+      type: object
+      required: [id, action, entity, changes, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        actorUserId:
+          type: string
+          format: uuid
+        action:
+          type: string
+        entity:
+          type: string
+        entityId:
+          type: string
+          format: uuid
+        changes:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+
+    AuditEventList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        nextCursor:
+          type: string
 
   responses:
     Error:

@@ -20,9 +20,16 @@ import (
 var (
 	// ErrUserNotFound is returned when no user matches the lookup.
 	ErrUserNotFound = errors.New("identity: user not found")
+	// ErrGroupNotFound is returned when no access group matches the lookup.
+	ErrGroupNotFound = errors.New("identity: access group not found")
 	// ErrDuplicateUsername is returned when the username already exists. Usernames
 	// are unique across the installation.
 	ErrDuplicateUsername = errors.New("identity: duplicate username")
+	// ErrDuplicateGroupName is returned when the access group name already exists.
+	ErrDuplicateGroupName = errors.New("identity: duplicate access group name")
+	// ErrSessionNotFound is returned when the session cookie is unknown,
+	// revoked, or expired.
+	ErrSessionNotFound = errors.New("identity: session not found")
 )
 
 // Queries exposes the identity queries. A service passes either the pool or a
