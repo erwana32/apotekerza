@@ -24,6 +24,181 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/identity/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sign in and start a session
+         * @description Public. On success sets an HttpOnly session cookie and returns the current user.
+         */
+        post: operations["Login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End the current session
+         * @description Revokes the session cookie. Idempotent.
+         */
+        post: operations["Logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the signed-in user */
+        get: operations["GetMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List users */
+        get: operations["ListUsers"];
+        put?: never;
+        /** Create a user */
+        post: operations["CreateUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one user */
+        get: operations["GetUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update a user
+         * @description Changes the display name and active flag. A user is deactivated, never deleted.
+         */
+        patch: operations["UpdateUser"];
+        trace?: never;
+    };
+    "/api/v1/identity/access-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List access groups */
+        get: operations["ListAccessGroups"];
+        put?: never;
+        /** Create an access group */
+        post: operations["CreateAccessGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/access-groups/{accessGroupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one access group */
+        get: operations["GetAccessGroup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update an access group and its permissions
+         * @description Replaces the permission set. The builtin Administrator group cannot be renamed or deactivated.
+         */
+        patch: operations["UpdateAccessGroup"];
+        trace?: never;
+    };
+    "/api/v1/identity/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List every permission the installation knows
+         * @description The registry read from api/openapi.yaml (x-permission values).
+         */
+        get: operations["ListPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identity/audit-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the audit trail
+         * @description Append-only audit trail and the source of per-document history (ADR-0010).
+         */
+        get: operations["ListAuditEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -55,6 +230,94 @@ export interface components {
             /** @enum {string} */
             status: "ok";
         };
+        LoginRequest: {
+            username: string;
+            password: string;
+        };
+        Me: {
+            user: components["schemas"]["User"];
+            permissions: string[];
+        };
+        User: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            companyId: string;
+            username: string;
+            displayName: string;
+            isActive: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            groupIds: string[];
+        };
+        UserList: {
+            items: components["schemas"]["User"][];
+            /** @description Opaque cursor for the next page; absent on the last page */
+            nextCursor?: string;
+        };
+        CreateUserRequest: {
+            /** @description Lowercase; unique across the installation */
+            username: string;
+            displayName: string;
+            password: string;
+            groupIds?: string[];
+        };
+        UpdateUserRequest: {
+            displayName: string;
+            isActive: boolean;
+            /** @description Replaces the user's group membership when present */
+            groupIds?: string[];
+        };
+        AccessGroup: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            isBuiltin: boolean;
+            isActive: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            permissions: string[];
+        };
+        AccessGroupList: {
+            items: components["schemas"]["AccessGroup"][];
+            nextCursor?: string;
+        };
+        CreateAccessGroupRequest: {
+            name: string;
+            permissions?: string[];
+        };
+        UpdateAccessGroupRequest: {
+            name: string;
+            isActive: boolean;
+            /** @description Replaces the group's permission set when present */
+            permissions?: string[];
+        };
+        PermissionList: {
+            items: string[];
+        };
+        AuditEvent: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            actorUserId?: string;
+            action: string;
+            entity: string;
+            /** Format: uuid */
+            entityId?: string;
+            changes: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AuditEventList: {
+            items: components["schemas"]["AuditEvent"][];
+            nextCursor?: string;
+        };
     };
     responses: {
         /** @description The request failed */
@@ -72,6 +335,8 @@ export interface components {
         Limit: number;
         /** @description Opaque cursor returned by the previous page */
         Cursor: string;
+        UserId: string;
+        AccessGroupId: string;
     };
     requestBodies: never;
     headers: never;
@@ -95,6 +360,326 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    Login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Signed in */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            401: components["responses"]["Error"];
+            default: components["responses"]["Error"];
+        };
+    };
+    Logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    GetMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The current user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            401: components["responses"]["Error"];
+            default: components["responses"]["Error"];
+        };
+    };
+    ListUsers: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of items in a page */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor returned by the previous page */
+                cursor?: components["parameters"]["Cursor"];
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    CreateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description Created user */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    GetUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    UpdateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    ListAccessGroups: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of items in a page */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor returned by the previous page */
+                cursor?: components["parameters"]["Cursor"];
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of access groups */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    CreateAccessGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAccessGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description Created access group */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroup"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    GetAccessGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accessGroupId: components["parameters"]["AccessGroupId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The access group */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroup"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    UpdateAccessGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accessGroupId: components["parameters"]["AccessGroupId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAccessGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated access group */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroup"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    ListPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The permission registry */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    ListAuditEvents: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of items in a page */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor returned by the previous page */
+                cursor?: components["parameters"]["Cursor"];
+                entity?: string;
+                entityId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of audit events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditEventList"];
                 };
             };
             default: components["responses"]["Error"];

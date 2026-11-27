@@ -45,17 +45,46 @@ The audit log carries `company_id` (the company whose record the event concerns)
 
 - The built-in **Administrator** group is global (no company), so its seed needs no company id. It is seeded by migration `20261126121000_identity_seed_administrator.sql` with `is_builtin = true`.
 - Its permissions are seeded per migration, one row per `x-permission` in `api/openapi.yaml`. Permissions are data, so they are recorded by migration rather than synced at startup: every migration that adds an endpoint with a new permission also grants it to Administrator.
-- **No user is seeded.** The first Administrator requires a real password, so it is created by a command (`cmd/createadmin`), never by a default credential.
+- **No user is seeded.** The first Administrator requires a real password, so it is created by a command (`cmd/createadmin`), never by a default credential. The password is read from `CREATEADMIN_PASSWORD` so it never appears in the process list or in shell history:
+
+  ```sh
+  CREATEADMIN_PASSWORD='...' go run ./cmd/createadmin -company <company-uuid> -username admin
+  ```
+
+  It joins the builtin `Administrator` group, which already holds every permission from migration `20261127100000_identity_seed_endpoint_permissions.sql`.
+
+## Endpoints
+
+Every operation declares `x-permission` in `api/openapi.yaml`; `Login` and the health probe are the only `x-public: true` ones. The guard (`httpapi/handler_guard.go`) is a generated strict middleware, so it sees each `operationId` and runs before the handler: an endpoint added to the spec cannot be served unguarded, and an operation that declares no permission is denied rather than served open.
+
+| Operation | Route | Permission |
+|---|---|---|
+| `Login` | `POST /api/v1/identity/login` | public, sets the session cookie |
+| `Logout` | `POST /api/v1/identity/logout` | `identity.session.write` |
+| `GetMe` | `GET /api/v1/identity/me` | `identity.user.read` |
+| `ListUsers`, `GetUser` | `GET /api/v1/identity/users[/{userId}]` | `identity.user.read` |
+| `CreateUser` | `POST /api/v1/identity/users` | `identity.user.write` |
+| `UpdateUser` | `PATCH /api/v1/identity/users/{userId}` | `identity.user.write` |
+| `ListAccessGroups`, `GetAccessGroup` | `GET /api/v1/identity/access-groups[/{accessGroupId}]` | `identity.group.read` |
+| `CreateAccessGroup` | `POST /api/v1/identity/access-groups` | `identity.group.write` |
+| `UpdateAccessGroup` | `PATCH /api/v1/identity/access-groups/{accessGroupId}` | `identity.group.write` |
+| `ListPermissions` | `GET /api/v1/identity/permissions` | `identity.group.read` |
+| `ListAuditEvents` | `GET /api/v1/identity/audit-events` | `identity.audit.read` |
+
+List endpoints are keyset-paginated: the response carries an opaque base64url `nextCursor` and the request takes `limit` plus `cursor` (see `api/AGENTS.md`). Users and groups are ordered and paged by `username`/`name`; audit events by `id DESC`, because timestamps can tie inside one transaction and UUIDv7 ids are time-ordered.
+
+A user is **deactivated**, never deleted. Deactivating a user also revokes every live session, so an old cookie stops working immediately. The built-in `Administrator` group cannot be renamed, deactivated, or stripped of permissions (`BUILTIN_GROUP_IMMUTABLE`): renaming it silently would weaken the only account that can repair the installation.
 
 ## Version 1 behaviour
 
 - One built-in group "Administrator" with all permissions (seeded). The Administrator creates further groups and users in the UI. Roles beyond Administrator are created by the Administrator later, so permissions must be listed in a registry each module contributes to.
-- The permission registry is the list of all `x-permission` values in `api/openapi.yaml`.
+- The permission registry is the list of all `x-permission` values in `api/openapi.yaml`, read from the embedded spec (`embedded-spec: true` in `oapi-codegen.yaml`) at startup. The same data drives `ListPermissions` and the guard, so the registry and the checks cannot drift.
+- A group may only be granted a permission that exists in the registry (`UNKNOWN_PERMISSION`), so a typo cannot create a dead permission that no endpoint checks.
 - The company is single in version 1: no per-company scoping of roles.
 
 ## Public interface (`module.go`)
 
-`Authenticate`, `CurrentUser(ctx)`, `HasPermission(ctx, permission)`, `RecordAudit(ctx, event)`.
+`Authenticate(ctx, token)`, `CurrentUser(session)`, `HasPermission(session, permission)`, `RecordAudit(ctx, event)`. Another module posts its history with `RecordAudit`; when it already holds a transaction, it uses the service's `RecordAuditTx` so the change and its history commit together.
 
 ## Permissions
 
@@ -63,7 +92,19 @@ The audit log carries `company_id` (the company whose record the event concerns)
 
 ## Error codes
 
-`INVALID_CREDENTIALS`, `SESSION_EXPIRED`, `PERMISSION_DENIED`.
+| Code | Status | Meaning |
+|---|---|---|
+| `INVALID_CREDENTIALS` | 401 | Wrong username **or** wrong password; the same code for both, so the response cannot probe which usernames exist. |
+| `SESSION_EXPIRED` | 401 | The cookie is missing, unknown, revoked, or past `expires_at`. |
+| `PERMISSION_DENIED` | 403 | Signed in, but the user's groups lack the operation's `x-permission`. |
+| `USER_INACTIVE` | 403 | A deactivated user tried to sign in. |
+| `USER_NOT_FOUND` | 404 | No such user. |
+| `ACCESS_GROUP_NOT_FOUND` | 404 | No such access group. |
+| `USERNAME_TAKEN` | 409 | The username already exists (unique across the installation). |
+| `ACCESS_GROUP_NAME_TAKEN` | 409 | The access group name already exists. |
+| `BUILTIN_GROUP_IMMUTABLE` | 409 | An attempt to weaken the builtin Administrator group. |
+| `UNKNOWN_PERMISSION` | 422 | A granted permission is not in the registry. |
+| `VALIDATION_FAILED` | 422 | A field rule failed; `details` names the field. |
 
 ## Deferred
 

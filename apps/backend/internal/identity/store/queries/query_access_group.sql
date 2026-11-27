@@ -49,3 +49,9 @@ JOIN identity_user_groups ug ON ug.access_group_id = gp.access_group_id
 JOIN identity_access_groups g ON g.id = ug.access_group_id
 WHERE ug.user_id = $1 AND g.is_active
 ORDER BY gp.permission;
+
+-- name: GetBuiltinAccessGroups :many
+SELECT id, name, is_builtin, is_active, created_at, updated_at
+FROM identity_access_groups
+WHERE is_builtin
+ORDER BY name;

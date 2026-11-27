@@ -41,6 +41,40 @@ func (q *Queries) GetAccessGroupByID(ctx context.Context, id uuid.UUID) (Identit
 	return i, err
 }
 
+const getBuiltinAccessGroups = `-- name: GetBuiltinAccessGroups :many
+SELECT id, name, is_builtin, is_active, created_at, updated_at
+FROM identity_access_groups
+WHERE is_builtin
+ORDER BY name
+`
+
+func (q *Queries) GetBuiltinAccessGroups(ctx context.Context) ([]IdentityAccessGroup, error) {
+	rows, err := q.db.Query(ctx, getBuiltinAccessGroups)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []IdentityAccessGroup{}
+	for rows.Next() {
+		var i IdentityAccessGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.IsBuiltin,
+			&i.IsActive,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertAccessGroup = `-- name: InsertAccessGroup :one
 INSERT INTO identity_access_groups (id, name, is_builtin, is_active)
 VALUES ($1, $2, $3, $4)
